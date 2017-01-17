@@ -1,0 +1,143 @@
+\documentclass[11pt]{article}
+
+\usepackage{float}
+\usepackage{hyperref}
+% formatting
+\usepackage{fullpage}
+\usepackage{verbatim}
+\usepackage{moreverb}
+\usepackage{parskip}
+\let\verbatiminput=\verbatimtabinput
+\def\verbatimtabsize{4\relax}
+
+\begin{document}
+\title{EECS 151/251A FPGA Lab\\
+Lab 0: Getting Set Up and Familiarizing Yourself with Tools}
+
+\author{Prof. Elad Alon \\
+TAs: Vighnesh Iyer, Bob Zhou \\Department of Electrical Engineering and Computer Sciences\\
+College of Engineering, University of California, Berkeley}
+\date{}
+\maketitle
+
+\section{Setting Up Accounts}
+
+\subsection{bCourses and Piazza}
+If you are enrolled in this class, you should have access to the EECS 151/251A bCourses page (\url{https://bcourses.berkeley.edu/courses/1458240}) already. If you don't have access, please let a TA or the instructor know immediately so we can resolve the issue. We will be using bCourses to publish documents and make announcements for this course.
+
+You should also register for a Piazza account and enroll in the EECS 151/251A class as soon as possible (\url{https://piazza.com/class/ixu3tqa01612lh}). We will be using Piazza as a discussion forum for this class and the labs. We will also send announcements through Piazza so it is vital that everyone is signed up.
+
+\subsection{Getting a EECS 151 Account}
+All students enrolled in the FPGA lab are required to get a EECS 151 class account to login to the workstations in lab. This semester, you can get a class account by using the webapp here:
+\url{https://acropolis.cs.berkeley.edu/~account/webacct/}
+
+Once you login using your CalNet ID, you can click on 'Get a new account' in the eecs151 row. Once the account has been created, you can email your class account form to yourself to have a record of your account information.
+
+Now you should be able to login to the workstations we have available in the lab. Enter your login and initial password in the login screen. Let the lab TA know if you have any problems setting up your class account.
+
+\subsubsection{Changing your password}
+To change your default password, click on Applications on the top left toolbar on your workstation desktop, then hover over System, then click on Terminal. In the terminal type and execute the command: \verb|ssh update.cs.berkeley.edu|
+
+You can then follow the prompts to set up a new password. You can always use the same webapp that you used to create your account to reset your password if you forget it.
+
+\subsection{Getting a Github Account}
+If you haven't done so previously, sign up for a Github account at \url{https://github.com/} with your berkeley.edu email address.
+
+If you already have a Github account that's registered with your personal email address, don't create a new account. Instead, login to Github, go here \url{https://github.com/settings/emails}, and add your berkeley.edu email address to your Github account.
+
+Once you have an account, send the TAs an email with your Github account username and email and your class account login (eecs151-xxx). Our emails are vighnesh.iyer@berkeley.edu and bob.linchuan@berkeley.edu. Try to do this as soon as possible.
+
+%\subsection{How to Login to the Lab Workstations From Your Laptop}
+
+\section{Getting Familiar with our Development Environment}
+\subsection{Linux Basics}
+In this class, we will be using a Linux development environment. We will be using CentOS as our Linux distro, which is a free version of Red Hat Linux. If you are unfamiliar or uncomfortable with Linux, and in particular, using the bash terminal, you should definitely check out this tutorial:
+
+\url{https://www.digitalocean.com/community/tutorial_series/getting-started-with-linux}
+
+It is highly recommended to go through all four parts of the tutorial above, even if you already are familiar with the content. To complete the labs and projects for this course, you will find it helpful to have good command line skills.
+
+One of the best ways to expand your working knowledge of bash is to watch others who are more experienced. Pay attention when you are watching someone else's screen and ask questions when you see something you don't understand. You will quickly learn many new commands and shortcuts.
+
+\subsection{Git Basics}
+Version control systems help track how files change over time and make it easier for collaborators to work on the same files and share their changes. For projects of any reasonable complexity, some sort of version control is an absolute necessity. There are tons of version control systems out there, each with some pros and cons. In this class, we will be using Git, one of the most popular version control systems. It is highly recommended that you make the effort to really understand how Git works, as it will make understanding how to actually use it much easier. Please check out the following link, which provides a good high level overview:
+
+\url{http://git-scm.com/book/en/Getting-Started-Git-Basics}
+
+Once you think you understand the material above, please complete the following tutorial:
+
+\url{http://try.github.com}
+
+Git is a very powerful tool, but it can be a bit overwhelming at first. If you don't know what you are doing, you can really cause lots of headaches for yourself and those around you, so please be careful. If you are ever doubtful about how to do something with Git ask a TA or an experienced classmate.
+
+For the purposes of this class you will probably only need to be proficient with the following commands:
+\begin{itemize}
+\item {\tt git status}
+\item {\tt git add}
+\item {\tt git commit}
+\item {\tt git pull}
+\item {\tt git push}
+\item {\tt git clone}
+\end{itemize}
+However, if you put in the effort to learn how to use some of the more powerful features (diff, blame, branch, log, mergetool, rebase, and many others), they can really increase your productivity.
+
+Git has a huge feature set which is well documented on the internet. If there is something you think Git should be able to do, chances are the command already exists. We highly encourage you to explore and discuss with fellow classmates and TA's.
+
+\textit{Optional:} If you would like to explore further, check out the slightly more advanced tutorial written for CS250:
+
+\url{http://inst.eecs.berkeley.edu/~cs250/fa13/handouts/tut1-git.pdf}
+
+\section{Setting Up Github Access}
+We will be using Github as our remote Git server for this class. Github is a popular Git hosting service which is home to many private and public (open-source) projects.
+
+\subsection{SSH Keys}
+Github authenticates you for access to your repository using ssh keys. Follow this tutorial to get SSH keys set up (this should be done on a lab workstation when you are logged in with your eecs151 class account).
+
+First, create a new SSH key: \url{https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/#platform-linux}
+
+Then, from your terminal run:
+\begin{verbatim}
+cat ~/.ssh/id_rsa.pub
+\end{verbatim}
+Copy the public key that's printed out in its entirety. Go here: \url{https://github.com/settings/keys}, click on 'New SSH Key', paste your public key into the box, and click 'Add SSH key'.
+
+Finally test your SSH connection: \url{https://help.github.com/articles/testing-your-ssh-connection/#platform-linux}.
+
+If you have any issues, ask a TA for help.
+
+\subsection{Acquiring Lab Files}
+The lab files, and eventually the project files, will be made available through a git repository provided by the staff. The suggested way to obtain these files is as follows. First, set up your ssh keys as described above. Then run the command below in your home directory,
+
+\begin{verbatim}
+git clone git@github.com:EECS150/labs_sp17.git
+\end{verbatim}
+
+Whenever a new lab is released, you should only need to do a \verb|git pull| to retrieve the new files. Furthermore, if there are any updates to the labs, \verb|git pull| will fetch the changes and merge them in.
+
+For now, you will only have pull access to this repository. If you make any local commits, you will not be able to push them to the remote server. Later on, each team will receive their own private repo for the project, and you will be able to push and pull from that.
+
+\section{Your First FPGA Design}
+Throughout the semester, you will build increasingly complex designs using Verilog, a widely used hardware description language (HDL). For this lab, you will use basic Verilog to describe a simple digital circuit.
+
+Now that you have cloned the \verb|labs_sp17| repository, you can \verb|cd| to the 
+\verb|labs_sp17/lab0| directory to see this lab's skeleton files. You will note that there is a \verb|src| directory, a \verb|cfg| directory, and a Makefile.
+
+The \verb|cfg| directory contains files that are used by the FPGA toolchain. We will learn about all the build tools in the toolchain and their configurations in the next lab, but for now you can ignore the \verb|cfg| directory and its contents.
+
+The \verb|src| directory contains files you can edit that describe the circuit you want to create on the FPGA. There are two files in this directory. \verb|ml505top.v| is a Verilog source file that represents the top-level of your circuit and it has access to the signals that come in and out of the FPGA chip. \verb|ml505top.ucf| is known as a User Constraints File and it describes the physical FPGA pin-mappings to signals in your top-level Verilog source file. For now, don't concern yourself with the details of the UCF file, as that will be covered in detail in the next lab. Open the \verb|ml505top.v| file in your preferred text editor (vim, emacs, nano, gedit, etc.) to get started.
+
+This file contains a Verilog module description which specifies which signals are inputs into the module and what signals are outputs.
+
+The \verb|GPIO_DIP| input is a signal that is 8 bits wide (as indicated by the [7:0] width descriptor). This input signal represents the logic signals coming from the DIP switches on the bottom right side of the FPGA development board at your workstation. You should inspect your board to find these switches and confirm that there are 8 switches.
+
+The \verb|GPIO_LED| output is a signal that is also 8 bits wide (as indicated by the [7:0] width descriptor). This output signal represents the logic signals coming out of the FPGA and going into the bank of LEDs at the bottom center of the FPGA development board. You should inspect your board to find these LEDs and confirm that there are 8 LEDs.
+
+In this file, we can describe how the DIP switches and the LEDs on the board are connected through the FPGA. There is one line of code that describes an AND gate that takes the values of the first 2 DIP switches, ANDs them together, and sends that signal out to the first LED. Let's put this digital circuit on the FPGA!
+
+In the \verb|lab0| directory, execute the command \verb|make| in your terminal. This will execute the default build process as defined by the Makefile. This might take a few minutes to complete. Once the process has completed, execute the command \verb|make impact| in your terminal to send the compiled digital circuit to the FPGA.
+
+Now give it a try. Physically toggle the first two DIP switches on the board and watch as the first LED lights up only when both switches are toggled high. Go ahead and extend this example with more AND or other gates to see them in action!
+
+There is no checkoff for this lab.
+
+\end{document}
