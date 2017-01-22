@@ -8,6 +8,7 @@
 \usepackage{verbatim}
 \usepackage{moreverb}
 \usepackage{minted}
+\usepackage{parskip}
 \let\verbatiminput=\verbatimtabinput
 \def\verbatimtabsize{4\relax}
 
@@ -23,9 +24,9 @@ College of Engineering, University of California, Berkeley}
 
 \section{Before You Start This Lab}
 
-Before you proceed with the contents of this lab, be sure that you have gone through and completed the steps involved in Lab 0. There is no checkoff for Lab 0, but there will be for this lab. Let the TA know if you are not signed up for this class on bCourses and Piazza or if you do not have a class account (eecs151-xxx), so we can get that sorted out. Also, please go through the Verilog Primer slides that are linked to on Piazza; you should feel somewhat comfortable with the basics of Verilog to complete this lab.\\
+Before you proceed with the contents of this lab, be sure that you have gone through and completed the steps involved in Lab 0. There is no checkoff for Lab 0, but there will be for this lab. Let the TA know if you are not signed up for this class on bCourses and Piazza or if you do not have a class account (eecs151-xxx), so we can get that sorted out. Also, please go through the Verilog Primer slides that are linked to on Piazza; you should feel somewhat comfortable with the basics of Verilog to complete this lab.
 
-To fetch the skeleton files for this lab \verb|cd| to the git repository (\verb|labs_sp17|) that you had cloned in Lab 0 and execute the command \verb|git pull|.\\
+To fetch the skeleton files for this lab \verb|cd| to the git repository (\verb|labs_sp17|) that you had cloned in Lab 0 and execute the command \verb|git pull|.
 
 You can find the documents/datasheets useful for this lab in the \verb|labs_sp17/docs| folder.
 
@@ -46,7 +47,7 @@ For the labs in this class, we will be using the Xilinx XUPV5-LX110T development
 	\item DVI-I connector (for video output)
 \end{enumerate}
 
-You will also notice a device sitting to the left of the development board that looks like this:\\
+You will also notice a device sitting to the left of the development board that looks like this:
 
 \begin{center}
 	\includegraphics{images/xilinx_platform_cable.jpg}
@@ -55,7 +56,7 @@ You will also notice a device sitting to the left of the development board that 
 This is a Xilinx FPGA programmer that connects to your workstation (desktop computer) over USB to receive a compiled bitstream file which it then sends to the development board and the FPGA over the JTAG interface. Before you run \verb|make impact| to send your design to the FPGA, make sure that the LED on the programmer is glowing green. If it is glowing yellow or not glowing at all, make sure that the wired connections are solid and that the development board is powered and on.
 
 \section{The FPGA - Xilinx Virtex-5 LX110T}
-To help you become familiar with the FPGA that you will be working with through the semester, please read Chapter 5: Configurable Logic Blocks (page 171) of the \href{http://inst.eecs.berkeley.edu/~cs150/fa11/resources/ug190.pdf}{Virtex-5 User Guide} and answer the following questions (you should be able to discuss your answers for checkoff):
+To help you become familiar with the FPGA that you will be working with through the semester, please read Chapter 5: Configurable Logic Blocks (pages 171-179 about SLICEs and pages 193-197 about multiplexing) of the \href{http://inst.eecs.berkeley.edu/~cs150/fa11/resources/ug190.pdf}{Virtex-5 User Guide} and answer the following questions (you should be able to discuss your answers for checkoff):
 
 \subsection{Checkoff Questions}
 \begin{enumerate}
@@ -67,16 +68,16 @@ To help you become familiar with the FPGA that you will be working with through 
 \end{enumerate}
 
 \section{Overview of the FPGA Build Toolchain}
-Before we begin the lab, we should familiarize ourselves with the CAD (computer aided design) tools that translate HDL into a working circuit on the FPGA. These tools will pass your design through several stages, each one bringing it closer to a concrete implementation.\\
+Before we begin the lab, we should familiarize ourselves with the CAD (computer aided design) tools that translate HDL into a working circuit on the FPGA. These tools will pass your design through several stages, each one bringing it closer to a concrete implementation.
 
-Looking at the directory structure of the \verb|lab1| folder, you can see two main folders, \verb|src| and \verb|cfg|. You will also find a \verb|Makefile|. When executing parts of the toolchain, you will want to run \verb|make| in the \verb|lab1| folder. The \verb|Makefile| delegates to another \verb|Makefile| that resides in the \verb|cfg| folder. In the \verb|cfg| folder you will also find other files that are used by tools during the build process. We will discuss every step of the toolchain.\\
+Looking at the directory structure of the \verb|lab1| folder, you can see two main folders, \verb|src| and \verb|cfg|. You will also find a \verb|Makefile|. When executing parts of the toolchain, you will want to run \verb|make| in the \verb|lab1| folder. The \verb|Makefile| delegates to another \verb|Makefile| that resides in the \verb|cfg| folder. In the \verb|cfg| folder you will also find other files that are used by tools during the build process. We will discuss every step of the toolchain.
 
 \subsection{Synthesis with XST}
-The synthesis tool (in this case of this class, Xilinx Synthesis Tool(xst)) is the first program that processes your design. Among other tasks, it is responsible for the process of transforming the primitive gates and flip-flops that you wrote in Verilog into LUTs and other primitive FPGA elements.\\
+The synthesis tool (in this case of this class, Xilinx Synthesis Tool(xst)) is the first program that processes your design. Among other tasks, it is responsible for the process of transforming the primitive gates and flip-flops that you wrote in Verilog into LUTs and other primitive FPGA elements.
 
-For example, if you described a circuit composed of many gates, but ultimately of 6 inputs and 1 output, xst will map your circuit down to a single 6-LUT. Likewise, if you described a flip-flop it will be mapped to a specific type of flip-flop which actually exists on the FPGA.\\
+For example, if you described a circuit composed of many gates, but ultimately of 6 inputs and 1 output, xst will map your circuit down to a single 6-LUT. Likewise, if you described a flip-flop it will be mapped to a specific type of flip-flop which actually exists on the FPGA.
 
-The following figure shows the flow of files through XST. \\
+The following figure shows the flow of files through XST.
 
 \begin{center}
 	\includegraphics{images/xst_design_flow.png}
@@ -113,7 +114,7 @@ Open the UCF \verb|lab0/ml505top.ucf| for Lab 0 and take a look. Here you can se
 	NET (net name)<bit index> IOSTANDARD="(voltage level)"
 \end{minted}
 
-The (net name) is the signal name that is presented to your top-level Verilog module. The bit index can be set optionally for a multi-bit signal for the same net name. The LOC defines what pin coming out of the FPGA contains that signal. All the pins coming out of the FPGA's BGA package are labeled, and this is how we can tap or drive signals from a particular pin. The second line defines an IOSTANDARD for a given net; this is just a statement of the voltage level for a given pin. Here is an example for a \verb|GPIO_LED|
+The (net name) is the signal name that is presented to your top-level Verilog module. The bit index can be set optionally for a multi-bit signal for the same net name. The LOC defines what pin coming out of the FPGA contains that signal. All the pins coming out of the FPGA's package are labeled, and this is how we can tap or drive signals from a particular pin. The second line defines an IOSTANDARD for a given net; this is just a statement of the voltage level for a given pin. Here is an example for a \verb|GPIO_LED|
 
 \begin{minted}{verilog}
 NET GPIO_LED<0> LOC="H18";
@@ -148,7 +149,7 @@ All of this information is dense and complex. Don't worry about understanding th
 \section{A Structural and Behavioral Adder Design + Using fpga\_editor and the FPGA schematic}
 
 \subsection{Build a Structural 4-bit Adder}
-To help you with this task, please refer to the 'Code Generation with for-generate loops' slide in the Verilog Primer Slides (slide 35). You do not need to use for-generate loops to complete this task, but they will make it easier.\\
+To help you with this task, please refer to the 'Code Generation with for-generate loops' slide in the Verilog Primer Slides (slide 35). You do not need to use for-generate loops to complete this task, but they will make it easier.
 
 Navigate to the \verb|/lab1/src| directory. Begin by opening \verb|full_adder.v| and fill in the logic to produce the full adder outputs from the inputs. Then open \verb|structural_adder.v| and construct a ripple carry adder using the full adder cells you designed earlier. You can manually instantiate four instances of the full adder cell or you can use a for-generate statement. You can add as many internal wires to your module as you want.
 
@@ -206,9 +207,9 @@ Check out \verb|behavioral_adder.v|. It has already been filled with the appropr
 Go through the same steps as you did for inspecting the structural adder. First run \verb|make schematic| and then run the FPGA editor. Record and note down any differences you see between both types of adders in the schematic and the FPGA editor. You will be asked for some observations during checkoff.
 
 \section{Designing a Tone Generator}
-Now it's time to try something new. Let's create a tone generator/buzzer on the FPGA. \\
+Now it's time to try something new. Let's create a tone generator/buzzer on the FPGA.
 
-Please take a look at the \verb|ml505_user_guide.pdf| in the \verb|labs_fa16/docs| folder. On page 20, you can see a list of oscillators that are present on the development board. These clock signals are generated outside the FPGA by a highly accurate crystal or a programmable clock generator IC. These clock signals are then connected to pins on the FPGA so that they can be brought into your Verilog top-level module.
+Please take a look at the \verb|ml505_user_guide.pdf| in the \verb|labs_sp17/docs| folder. On page 20, you can see a list of oscillators that are present on the development board. These clock signals are generated outside the FPGA by a highly accurate crystal or a programmable clock generator IC. These clock signals are then connected to pins on the FPGA so that they can be brought into your Verilog top-level module.
 
 Take a look at the \verb|ml505top.v| module and notice the \verb|CLK_33MHZ_FPGA| input. Next take a look at the UCF \verb|ml505top.ucf| and notice how the LOC for the clock net is set to AH17, just as specified in the ML505 User Guide. Basically, we have a 33Mhz clock signal that is generated on a clock generation IC on the ML505 board and is then routed to the FPGA's AH17 pin. We can access this pin from within our Verilog top-level module and can propagate this clock signal to any submodules that may need it. This is a 33 Mhz clock signal, so there are a couple other lines in the UCF that specify the period of the clock so that timing checks can be performed when place and route or trace are being executed.
 
