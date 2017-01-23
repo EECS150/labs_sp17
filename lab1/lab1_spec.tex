@@ -38,10 +38,10 @@ For the labs in this class, we will be using the Xilinx XUPV5-LX110T development
 	\item Virtex-5 FPGA (covered by heat sink). It is connected to the peripheral ICs and I/O connectors via PCB traces.
 	\item GPIO LEDs, numbered 0-7
 	\item North, East, South, West, Center user push buttons, each with a corresponding LED
-	\item Rotary encoder (a wheel we can rotate clockwise or counterclockwise and push horizontally)
+	\item Rotary encoder (a wheel we can rotate clockwise or counterclockwise and push inward towards the board)
 	\item GPIO DIP (dual-inline package) switches, numbered 1-8 (but referred to 0-7 in code)
 	\item Board power switch (toggle for a full board reset, after which you will have to reprogram the FPGA)
-	\item Power connector; the power cable on many of these board is sensitive to movement and can come loose easily. Make sure you seat the power cable properly.
+	\item Power connector; the power cable on many of these boards is sensitive to movement and can come loose easily. Make sure you seat the power cable properly.
 	\item Serial port
 	\item JTAG header (used to program the FPGA, the Xilinx programmer is connected to this header)
 	\item DVI-I connector (for video output)
@@ -53,7 +53,7 @@ You will also notice a device sitting to the left of the development board that 
 	\includegraphics{images/xilinx_platform_cable.jpg}
 \end{center}
 
-This is a Xilinx FPGA programmer that connects to your workstation (desktop computer) over USB to receive a compiled bitstream file which it then sends to the development board and the FPGA over the JTAG interface. Before you run \verb|make impact| to send your design to the FPGA, make sure that the LED on the programmer is glowing green. If it is glowing yellow or not glowing at all, make sure that the wired connections are solid and that the development board is powered and on.
+This is a Xilinx FPGA programmer that connects to your workstation (desktop computer) over USB to receive a compiled bitstream file which it then sends to the development board and the FPGA over the JTAG interface. Before you run \verb|make impact| to send your design to the FPGA, make sure that the LED on the programmer is glowing green. If it is glowing yellow or not glowing at all, make sure that the wired connections are solid and that the development board is powered on.
 
 \section{The FPGA - Xilinx Virtex-5 LX110T}
 To help you become familiar with the FPGA that you will be working with through the semester, please read Chapter 5: Configurable Logic Blocks (pages 171-179 about SLICEs and pages 193-197 about multiplexing) of the \href{http://inst.eecs.berkeley.edu/~cs150/fa11/resources/ug190.pdf}{Virtex-5 User Guide} and answer the following questions (you should be able to discuss your answers for checkoff):
@@ -148,23 +148,23 @@ All of this information is dense and complex. Don't worry about understanding th
 
 \section{A Structural and Behavioral Adder Design + Using fpga\_editor and the FPGA schematic}
 
-\subsection{Build a Structural 4-bit Adder}
-To help you with this task, please refer to the 'Code Generation with for-generate loops' slide in the Verilog Primer Slides (slide 35). You do not need to use for-generate loops to complete this task, but they will make it easier.
+\subsection{Build a Structural 8-bit Adder}
+To help you with this task, please refer to the 'Code Generation with for-generate loops' slide in the Verilog Primer Slides (slide 35).
 
-Navigate to the \verb|/lab1/src| directory. Begin by opening \verb|full_adder.v| and fill in the logic to produce the full adder outputs from the inputs. Then open \verb|structural_adder.v| and construct a ripple carry adder using the full adder cells you designed earlier. You can manually instantiate four instances of the full adder cell or you can use a for-generate statement. You can add as many internal wires to your module as you want.
+Navigate to the \verb|/lab1/src| directory. Begin by opening \verb|full_adder.v| and fill in the logic to produce the full adder outputs from the inputs. Then open \verb|structural_adder.v| and construct a ripple carry adder using the full adder cells you designed earlier. You can manually instantiate four instances of the full adder cell or you can use a for-generate statement. You can add as many internal wires to your module as you need.
 
-Finally, inspect the \verb|ml505top.v| top-level module and see how your structural adder is instantiated and hooked up to the top-level signals.
+Finally, inspect the \verb|ml505top.v| top-level module and see how your structural adder is instantiated and hooked up to the top-level signals. For now, just look at the \verb|user_adder| instance of your structural adder.
 
-Run \verb|make| in the \verb|/lab1| directory and let the build process complete. Then run \verb|make impact| to send your design to the FPGA. Test out your design and see that you get the correct results from your adder. You should try entering different binary numbers into your adder with the DIP switches and see that the correct sum is displayed on the first 5 LEDs. 
+Run \verb|make| in the \verb|/lab1| directory and let the build process complete. Then run \verb|make impact| to send your design to the FPGA. Test out your design and see that you get the correct results from your adder. You should try entering different binary numbers into your adder with the DIP switches and see that the correct sum is displayed on the GPIO LEDs. 
 
 \subsection{Inspection of Structural Adder Using Schematic and fpga\_editor}
-Now let's take a look at how the Verilog you wrote mapped to the primitive components on the FPGA. To do this, we will first look at a high-level schematic of your circuit using Xilinx ISE.\\
+Now let's take a look at how the Verilog you wrote mapped to the primitive components on the FPGA. To do this, we will first look at a high-level schematic of your circuit using Xilinx ISE.
 
 Execute the command \verb|make schematic| in the \verb|/lab1| directory. This will launch the ISE project navigator. Once inside ISE, go to \verb|File -> Open| and select \verb|ml505top.ngr|. You will recall that the NGR file is an output of XST (synthesis). Choose \verb|Start with a schematic of the top-level block| in the dialog that pops up.
 
-This will given you a fairly straightforward hierarchical block-level view of your design. You will find your circuit by drilling down in the following modules: \verb|ml505top, st_add, full_adder|. Check to see that your structural adder module is hooked up properly and looks sane. It's ok if the wires aren't connected, just hover your mouse over the endpoints on the schematic and ensure that the connections are as you expect. Take note of the primitive blocks in your circuit.\\
+This will given you a fairly straightforward hierarchical block-level view of your design. You will find your circuit by drilling down in the following modules: \verb|ml505top, user_adder, full_adder|. Check to see that your structural adder module is hooked up properly and looks sane. It's ok if the wires aren't connected, just hover your mouse over the endpoints on the schematic and ensure that the connections are as you expect. Take note of the primitive blocks in your circuit.
 
-Now let's take a look at how your circuit was placed and laid out on the FPGA with the \verb|fpga_editor|. Recall that the \verb|.ncd| file is the final result of the FPGA toolchain flow. There also exists a \verb|.pcf| file (Physical Constraints File) that contains the information originally present in the UCF, that is the locations of the I/O pins on the FPGA. By opening these files in the FPGA editor, you can visualize how your design will actually be mapped to the FPGA. Run these commands.
+Now let's take a look at how your circuit was placed and laid out on the FPGA with the \verb|fpga_editor|. Recall that the \verb|.ncd| file is the final result of the FPGA toolchain flow. There also exists a \verb|.pcf| file (Physical Constraints File) that contains the information originally present in the UCF. By opening these files in the FPGA editor, you can visualize how your design will actually be mapped to the FPGA. Run these commands.
 
 \begin{minted}{bash}
 	cd lab1/build/ml505top
@@ -194,13 +194,13 @@ Recall that SLICELs contain the look-up tables that actually implement the logic
 	\includegraphics[width=\textwidth]{images/fpga_editor_2.png}
 \end{center}
 
-Click on the \verb|F=| button to reveal the function of the LUT. Go ahead and explore several SLICELs to see how they are connected to each other and the outputs of your circuit.\\
+Click on the \verb|F=| button to reveal the function of the LUT. Go ahead and explore several SLICELs to see how they are connected to each other and the outputs of your circuit.
 
-Finally you should run \verb|make report| to collect resource usage information for your structural design. Record the number of LUTs used.
+\subsection{Build a Behavioral 8-bit Adder}
 
-\subsection{Build a Behavioral 4-bit Adder}
+Check out \verb|behavioral_adder.v|. It has already been filled with the appropriate logic for you. Notice how behavioral Verilog allows you to describe the function of a circuit rather than the topology or implementation.
 
-Check out \verb|behavioral_adder.v|. It has already been filled with the appropriate logic for you. Open \verb|ml505top.v| and comment out the structural adder instantiation and uncomment the behavioral adder instantiation. Then run \verb|make| and \verb|make impact|. Verify that the adder circuit that you constructed by hand performs like this behavioral adder.
+In \verb|ml505top.v|, you can see that the \verb|structural_adder| and the \verb|behavioral_adder| are both instantiated in the self-test section. A module called \verb|adder_tester| has been written for you that will check that the sums generated by both your adders are equal for all possible input combinations. If both your adders are operating identically, the compass LEDs will all light up. Verify this on your board.
 
 \subsection{Inspection of Behavioral Adder Using Schematic and fpga\_editor}
 
