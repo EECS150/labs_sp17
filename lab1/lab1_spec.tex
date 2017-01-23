@@ -209,58 +209,52 @@ Go through the same steps as you did for inspecting the structural adder. First 
 \section{Designing a Tone Generator}
 Now it's time to try something new. Let's create a tone generator/buzzer on the FPGA.
 
-Please take a look at the \verb|ml505_user_guide.pdf| in the \verb|labs_sp17/docs| folder. On page 20, you can see a list of oscillators that are present on the development board. These clock signals are generated outside the FPGA by a highly accurate crystal or a programmable clock generator IC. These clock signals are then connected to pins on the FPGA so that they can be brought into your Verilog top-level module.
+Please take a look at the \verb|ml505_user_guide.pdf| in the \verb|labs_sp17/docs| folder. On page 20, you can see a list of oscillators that are present on the development board. These clock signals are generated outside the FPGA by a highly accurate crystal or a programmable clock generator IC. These clock signals are then connected to pins on the FPGA so that they can be used in your Verilog design.
 
-Take a look at the \verb|ml505top.v| module and notice the \verb|CLK_33MHZ_FPGA| input. Next take a look at the UCF \verb|ml505top.ucf| and notice how the LOC for the clock net is set to AH17, just as specified in the ML505 User Guide. Basically, we have a 33Mhz clock signal that is generated on a clock generation IC on the ML505 board and is then routed to the FPGA's AH17 pin. We can access this pin from within our Verilog top-level module and can propagate this clock signal to any submodules that may need it. This is a 33 Mhz clock signal, so there are a couple other lines in the UCF that specify the period of the clock so that timing checks can be performed when place and route or trace are being executed.
+Take a look at the \verb|ml505top.v| module and notice the \verb|CLK_33MHZ_FPGA| input. Next take a look at the UCF (scroll to the bottom) \verb|ml505top.ucf| and notice how the LOC for the clock net is set to AH17, just as specified in the ML505 User Guide. Basically, we have a 33Mhz clock signal that is generated on a clock generation IC on the ML505 board and is then routed to the FPGA's AH17 pin. We can access the signal from within our Verilog top-level module and can propagate this clock signal to any submodules that may need it. This is a 33 Mhz clock signal, so there are a couple other lines in the UCF that specify the period of the clock so that timing checks can be performed when PAR is being executed.
 
 \subsection{Piezoelectronic Buzzers}
-Take a look at page 14 of the ML505 User Guide to see a block diagram of all the signals that come into our FPGA and can be monitored/driven from our Verilog design. The fourth from the top box on the left is labeled Piezo/Speaker. To get more information about this component go to page 37.\\
+Take a look at page 14 of the ML505 User Guide to see a block diagram of all the signals that come into our FPGA and can be monitored/driven from our Verilog design. The fourth from the top box on the left is labeled Piezo/Speaker. To get more information about this component go to page 37.
 
 Notice how the table specifies that the piezo signal that is routed to the actual component on the board can be driven by FPGA pin G30. Keep this in mind.
 
 Take a look at this \href{https://en.wikipedia.org/wiki/Piezoelectric_speaker}{wiki page} to see how a piezoelectric speaker functions.
 
 \subsection{Finding the Piezo in the Schematic}
-Let's look into how the piezo is connected to the FPGA and the ML505 board. First take a look at the datasheet for the piezo on this board. You can find the datasheet in \verb|labs_fa16/docs| with filename \verb|AT-1220-TT-2-R.pdf|. The datasheet has a picture of how the piezo speaker looks; now find it on the ML505 board! \\
+Let's look into how the piezo is connected to the FPGA and the ML505 board. First take a look at the datasheet for the piezo on this board. You can find the datasheet in \verb|labs_sp17/docs| with filename \verb|AT-1220-TT-2-R.pdf|. The datasheet has a picture of how the piezo speaker looks; now find it on the ML505 board!
 
-Once you have located the piezo speaker, let's see the schematic of the board to see how it is driven by the FPGA. Open the schematic file in the \verb|labs_fa16/docs| folder called \verb|ml50x_schematics.pdf|. Go to page 3 of the schematics and take a look at the Bank 15 block. The third pin from the top on the right side is labeled \verb|PIEZO_SPEAKER|. Notice also how \verb|G30| is listed next to the net indicating that is connected to the G30 pin on the FPGA. Bank 15 is an I/O block on the FPGA; general purpose I/O connections on the FPGA are organized in many banks, each with some special connections and voltage inputs.
+Once you have located the piezo speaker, let's see the schematic of the board to see how it is driven by the FPGA. Open the schematic file in the \verb|labs_sp17/docs| folder called \verb|ml50x_schematics.pdf|. Go to page 3 of the schematics and take a look at the Bank 15 block. The third pin from the top on the right side is labeled \verb|PIEZO_SPEAKER|. Notice also how \verb|G30| is listed next to the net indicating that is connected to the G30 pin on the FPGA. Bank 15 is an I/O block on the FPGA; general purpose I/O connections on the FPGA are organized in many banks, each with their own voltage supply.
 
-Clicking on the \verb|PIEZO_SPEAKER| label will take you to page 18 of the schematic. Here you can see the piezo net going into an IC (SN74LVC1G126). This IC just acts as a buffer for the signal coming from the FPGA allowing a greater current to be sent into the piezo speaker. From this IC you can see the signal go through a 10uF capacitor before going into the piezo (SP1 in the schematic).
+Clicking on the \verb|PIEZO_SPEAKER| label will take you to page 18 of the schematic. Here you can see the piezo net going into an IC (SN74LVC1G126). This IC just acts as a buffer for the signal coming from the FPGA allowing a greater current to be driven into the piezo speaker. From this IC you can see the signal go through a 10uF capacitor before going into the piezo (SP1 in the schematic).
 
 \subsection{Adding the Piezo signal to the UCF File}
-Now let's add the piezo connection to the UCF so that we can bring it in as an output from the Verilog top-level module. To do this, we will use the master UCF file. Find this in the \verb|labs_fa16/docs| folder with the filename \verb|master_xupv5-lx110t.ucf|. Open the master UCF and search for 'piezo'. You will find on line 368 the net declaration for the \verb|PIEZO_SPEAKER| signal. Copy this line into your \verb|ml505top.ucf| file. Specify the IOSTANDARD for this net in the UCF as \verb|LVCMOS18| since the bank (Bank 15) it is connected to has a Vcco of 1.8V.\\
+Now let's add the piezo connection to the UCF so that we can bring it in as an output from the Verilog top-level module. To do this, we will use the master UCF file. Find this in the \verb|labs_sp17/docs| folder with the filename \verb|master_xupv5-lx110t.ucf|. Open the master UCF and search for 'piezo'. You will find on line 368 the net declaration for the \verb|PIEZO_SPEAKER| signal. Copy this line into your \verb|ml505top.ucf| file. Specify the IOSTANDARD for this net in the UCF as \verb|LVCMOS18| since the bank (Bank 15) it is connected to has a Vcco of 1.8V.
 
 Ask a TA if you need help for this part.
 
 \subsection{Generating a square wave}
-In your \verb|ml505top.v| file comment out your adders and uncomment the \verb|tone_generator| instantiation. Add an input to the top-level module with a matching net name to the net you declared in the UCF. Connect the \verb|tone_generator| instance to the piezo input.\\
-
-Now perform some quick calculations. Let's say we want to play a 440 Hz square wave into the piezo speaker. We want our square wave to have a 50\% duty cycle, so for half of the period of one oscillation the wave should be high and for the other half, the wave should be low. We have a 33 Mhz clock input we can use to time our circuit and wave generation. \\
+Let's say we want to play a 440 Hz square wave into the piezo speaker. We want our square wave to have a 50\% duty cycle, so for half of the period of one oscillation the wave should be high and for the other half, the wave should be low. We have a 33 Mhz clock input we can use to time our circuit.
 
 Find the following:
 \begin{enumerate}
 	\item The period of our clock signal (frequency = 33 Mhz)?
 	\item The period of a 440 Hz square wave?
-	\item Approximately how many clock cycles pass during one period of the square wave (round to even number)?
+	\item How many clock cycles does it take for one period of the square wave?
 \end{enumerate}
 
-Now, knowing how many clock cycles equals one cycle of the square wave, you can design this circuit. First open \verb|tone_generator.v|. Some starter code is included in this file. Begin by sizing your \verb|clock_counter| register to the number of bits it would take to store the clock cycles per square wave period.\\
+Now, knowing how many clock cycles equals one cycle of the square wave, you can design this circuit. First open \verb|tone_generator.v|. Some starter code is included in this file. Begin by sizing your \verb|clock_counter| register to the number of bits it would take to store the clock cycles per square wave period. Design the logic such that a 440 Hz square wave comes out of the \verb|square_wave_out| output.
 
-Next, modify the \verb|always @ (posedge clk)| block to increment the \verb|clock_counter| on every cycle until it hits your calculated number of cycles, upon which the counter should be set to zero.\\
-
-Finally, use an assign statement or an always @ (*) block to set \verb|square_wave_out| to either 1 or 0 depending on whether the \verb|clock_counter| is below or above the middle of the number of clock cycles that pass during one period of the square wave.\\
+Add an output to \verb|ml505top.v| with a matching net name to the piezo net you declared in the UCF. Instantiate the \verb|tone_generator| and connect it to the piezo output.
 
 Now \verb|make| and \verb|make report|. Check for any warnings or errors and try to fix them. Ask a TA if you need help here. When everything looks good run \verb|make impact|. You should now hear a buzzing noise at 440Hz.
 
 \subsection{Switching the Wave On and Off}
-Now you have a tone, but it can't be toggled on and off without pulling the power to the FPGA board. Let's use the \verb|output_enable| input of the \verb|tone_generator| module to gate the square wave output. When \verb|output_enable| is 0, you should pass 0 to the \verb|square_wave_out| output, but when \verb|output_enable| is 1, you should pass your full square wave to \verb|square_wave_out|. You can accomplish this by adding a wire in your module which stores the square wave signal, and then using an assign statement to assign \verb|square_wave_out| based on the value of \verb|output_enable|.
+Now you have a tone, but it can't be toggled on and off without pulling the power to the FPGA board. Let's use the \verb|output_enable| input of the \verb|tone_generator| module to gate the square wave output. When \verb|output_enable| is 0, you should pass 0 to the \verb|square_wave_out| output, but when \verb|output_enable| is 1, you should pass your full square wave to \verb|square_wave_out|. You can accomplish this by adding a wire in your module which holds the square wave signal, and then using an assign ternary statement to assign \verb|square_wave_out| based on the value of \verb|output_enable|.
 
-Now \verb|make| and \verb|make report|. Check for any warnings or errors and try to fix them. Ask a TA if you need help here. When everything looks good run \verb|make impact|. You should now hear a buzzing noise at 440Hz that can be turned on or off by toggling the 0th DIP switch.
+Wire up the \verb|output_enable| signal to the first DIP switch (\verb|GPIO_DIP[0]|) in \verb|ml505top|.
 
-% This will be covered later, there is a lot of material already for this lab
-%\section{Simulating Your Tone Generator}
+Now \verb|make| and \verb|make report|. Check for any warnings or errors and try to fix them. Ask a TA if you need help here. When everything looks good run \verb|make impact|. You should now hear a buzzing noise at 440Hz that can be turned on or off by toggling the first DIP switch.
 
-% This will be a gentle intro to what is done in the next lab
 \section{Optional: Use Remaining Switches to Control Frequency or Duty Cycle}
 This part is completely optional and is self-directed. You can use the remaining 7 DIP switches as inputs into your \verb|tone_generator| and can use those switches to encode a binary number that represents a particular duty cycle for your square wave or a particular range of frequencies. Show that these switches give you control over the duty cycle or frequency of your square wave output to the piezo speaker.
 
@@ -274,9 +268,6 @@ To checkoff for this lab, have these things ready to show the TA:
 	\item Demonstrate your tone generator on the FPGA and show that the 0th DIP switch controls the buzzing of the piezo speaker
 \end{enumerate}
 
-You are done with this lab. In the next lab, we will extend our \verb|tone_generator| to read a song from a block RAM and play it out over the piezo speaker. We will explore state machines and simulation/functional verification.
-
-% Reserve for the next lab, this can be tough since it involves synchronization and edge triggered sampling of phase differences
-%\section{Using the Rotary Encoder to Switch Frequencies}
+You are done with this lab. In the next lab, we will simulate our digital designs in software, and extend our \verb|tone_generator| to read a song from a ROM and play it out over the piezo speaker.
 
 \end{document}
