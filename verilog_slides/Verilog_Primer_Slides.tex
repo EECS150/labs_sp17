@@ -301,14 +301,22 @@ We just described a 32-bit adder, but didn't specify the architecture or the log
 	\begin{itemize}
 		\item The conditional operator allows us to define if-else logic in an assign statement.
 		\item Syntax: (condition) ? (expression if condition is true) : (expression if condition is false)
-		\item Let's design a circuit that will output 0 if the two inputs are equal, output 1 if input a is less than input b, and output 2 if input a is greater than input b.
+		\item Example: an expression that implements min(a, 10) 
 	\end{itemize}
 
+\begin{minted}[fontsize=\scriptsize]{verilog}
+assign out = a > 10 ? 10 : a;
+\end{minted}
+
+\begin{itemize}
+	\item Example: output 0 if the two inputs are equal, output 1 if input a is less than input b, and output 2 if input a is greater than input b.
+\end{itemize}
 \begin{minted}[fontsize=\scriptsize]{verilog}
 module equality_checker(input a [31:0], input b [31:0], output c [1:0]);
 	assign c = a == b ? 2'd0 : (a < b ? 2'd1 : 2'd2);
 endmodule
 \end{minted}
+
 \end{frame}
 
 \begin{frame}[fragile]{Verilog Literals}
@@ -329,9 +337,9 @@ endmodule
 	\begin{itemize}
 		\item Macros in Verilog are similar to macros available in C
 		\item \texttt{\`{}include} is a preprocessor command to inject a Verilog source file at its location; often used to bring in a Verilog header file (.vh)
-		\item \texttt{\`{}define <Constant Name> <Constant Value>} is used to declare a synthesis-time constant; use these instead of putting 'magic' values in code
-		\item \texttt{\`{}define <Macro function name>(ARGS) <Function body>} is used to define a macro function that can generate code based on ARGS.
-		\item \texttt{\`{}ifndef <NAME>, \`{}define <NAME>, \`{}endif} is a include guard (used similarly in C).
+		\item \texttt{\`{}define <Constant Name> <Constant Value>} is used to declare a synthesis-time constant; use these instead of putting 'magic' values in RTL
+		\item \texttt{\`{}define <Macro function name>(ARGS) <Function body>} is used to define a macro function that can generate RTL based on ARGS.
+		\item \texttt{\`{}ifndef <NAME>, \`{}define <NAME>, \`{}endif} is an include guard (used similarly in C).
 	\end{itemize}
 \end{frame}
 
@@ -383,12 +391,13 @@ endmodule
 	Combinational logic (i.e. no state elements) can be written using \texttt{always@(*)}.
 	The value inside the parentheses is called the sensitivity list.
 	Using a \texttt{*} will tell the compiler to compute the sensitivity list automatically (recommended for combinational logic).
+	
+	\textbf{Only reg nets can be assigned in an always block}
 
 \begin{minted}{verilog}
 	reg y;
 	reg x;
-	always@(*)
-	begin
+	always @(*) begin
 		x = ~y;
 	end
 \end{minted}
@@ -405,12 +414,12 @@ endmodule
 	input y;
 	input x;
 	reg [1:0] z;
-	always@(*)
-	begin
+	always @(*) begin
 		if(x) begin
 			z[0] = w;
 			z[1] = y;
-		end else begin
+		end 
+		else begin
 			z[0] = y;
 			z[1] = x;
 		end
@@ -422,16 +431,15 @@ endmodule
 \begin{frame}[fragile]{Case statements}
 	Like C, verilog supports case statements for generating multiplexor structures.
 
-\begin{minted}{verilog}
+\begin{minted}[tabsize=4]{verilog}
 	input [1:0] x;
 	reg [1:0] y;
-	always@(*)
-	begin
+	always @(*) begin
 		case(x)
-		0: y = 2'd0;
-		1: y = 2'd3;
-		2: y = 2'd2;
-		default: y = 2'd2;
+			0: y = 2'd0;
+			1: y = 2'd3;
+			2: y = 2'd2;
+			default: y = 2'd2;
 		endcase
 	end
 \end{minted}
@@ -440,8 +448,9 @@ endmodule
 
 \begin{frame}[fragile]{Non-Synthesizable Control Statements}
 	WARNING: \texttt{for} and \texttt{while} loops can't be mapped to hardware!
-
-	These statements are valid verilog (and can be simulated), but cannot be mapped to hardware.
+	These statements are valid verilog (and can be simulated), but cannot always be mapped to hardware.
+	
+	
 	Generate statements (more later) are the appropriate use for \texttt{for} loops.
 \end{frame}
 
@@ -451,11 +460,10 @@ endmodule
 
 	For example, this code generates a latch:
 
-\begin{minted}{verilog}
+\begin{minted}[tabsize=4]{verilog}
 	input [1:0] x;
 	reg [1:0] y;
-	always@(*)
-	begin
+	always @(*) begin
 		if(x == 2'b10) begin
 			y = 2'd3;
 		end else if(x == 2'b11) begin
@@ -470,11 +478,10 @@ endmodule
 
 	This code has a default value and will not generate a latch:
 
-\begin{minted}{verilog}
+\begin{minted}[tabsize=4]{verilog}
 	input [1:0] x;
 	reg [1:0] y;
-	always@(*)
-	begin
+	always @(*) begin
 		y = 2'b00;
 		if(x == 2'b10) begin
 			y = 2'd3;
@@ -496,8 +503,7 @@ endmodule
 	input clk;
 	reg [1:0] x;
 
-	always@(posedge clk)
-	begin
+	always @(posedge clk) begin
 		x <= x + 1;
 	end
 \end{minted}
@@ -507,20 +513,18 @@ endmodule
 \begin{frame}[fragile]{Blocking vs Non-Blocking Assignments}
 	What was up with the \texttt{<=} operator on the last slide?
 	Verilog has two assignment operators: blocking (\texttt{=}) and non-blocking (\texttt{<=}).
-	For the purposes of this class, always use blocking (\texttt{=}) for combinational logic and non-blocking (\texttt{<=}) for sequential logic.
+	For the purposes of this class, \textbf{always} use blocking (\texttt{=}) for combinational logic and non-blocking (\texttt{<=}) for sequential logic.
 
-\begin{minted}{verilog}
+\begin{minted}[tabsize=4]{verilog}
 	input clk;
 	reg [1:0] x;
 	reg [1:0] next_x;
 
-	always@(*)
-	begin
+	always @(*) begin
 		next_x = x + 1;
 	end
 
-	always@(posedge clk)
-	begin
+	always @(posedge clk) begin
 		x <= next_x;
 	end
 \end{minted}
@@ -536,8 +540,7 @@ endmodule
 	reg [31:0] x;
 	reg [31:0] y;
 
-	always@(*)
-	begin
+	always@(*) begin
 		x = coeff*y;
 	end
 
@@ -546,11 +549,11 @@ endmodule
 \end{frame}
 
 \begin{frame}[fragile]{Wire vs. Reg}{What is a real register and what is just a wire?}
-	Follow these rules to figure out when to use a wire and when to use a reg net type:
+	Rules for picking a wire or reg net type:
 	\begin{itemize}
 		\item If a signal needs to be assigned inside an always block, it must be declared as a reg.
 		\item If a signal is assigned using a continuous assignment statement, it must be declared as a wire.
-		\item By default module input and output ports are wires; if any output ports are assigned in an always block, they must be explicitly declared: \texttt{output reg <signal name>}
+		\item By default module input and output ports are wires; if any output ports are assigned in an always block, they must be explicitly declared as reg: \texttt{output reg <signal name>}
 	\end{itemize}
 	
 	How to know if a net represents a register or a wire.
@@ -565,11 +568,11 @@ endmodule
 	Generate loops are used to iteratively instantiate modules.
 	This is useful with parameters (next slide) or when instantiating large numbers of the same module.
 
-	\begin{minted}[fontsize=\scriptsize]{verilog}
+	\begin{minted}[fontsize=\scriptsize,tabsize=4]{verilog}
 	wire [3:0] a, b;
 	genvar i;
 
-	core_inst firstone (1'b0, a[i], b[i]);
+	core_inst first_one (1'b0, a[i], b[i]);
 
 	// programmatically wire later instances
 	generate
@@ -586,34 +589,41 @@ endmodule
 	This is useful to change bus sizes or with generate statements.
 	Here we define and instantiate a programmable-width adder with a default width of 32.
 
-	\begin{minted}[fontsize=\scriptsize]{verilog}
-	module adder #(parameter width=32)
-		(input [width-1:0] a,
-		 input [width-1:0] b,
-		 output [width:0] s);
-		s = a + b;
-	endmodule
+\begin{minted}[fontsize=\scriptsize]{verilog}
+module adder #(parameter width=32)
+	(input [width-1:0] a,
+	 input [width-1:0] b,
+	 output [width:0] s);
+	s = a + b;
+endmodule
 
-	module top();
-		localparam adder1width = 64;
-		localparam adder2width = 32;
-		reg [adder1width-1:0] a,b;
-		reg [adder2width-1:0] c,d;
-		wire out1;
-		wire out2;
-		adder #(.width(adder1width)) adder64 (.a(a), .b(b), .s(out1));
-		adder #(.width(adder2width)) adder32 (.a(c), .b(d), .s(out2));
-	endmodule
-	\end{minted}
+module top();
+	localparam adder1width = 64;
+	localparam adder2width = 32;
+	reg [adder1width-1:0] a,b;
+	reg [adder2width-1:0] c,d;
+	wire [adder1width:0] out1;
+	wire [adder2width:0] out2;
+	adder #(.width(adder1width)) adder64 (.a(a), .b(b), .s(out1));
+	adder #(.width(adder2width)) adder32 (.a(c), .b(d), .s(out2));
+endmodule
+\end{minted}
 
 \end{frame}
 
-\begin{frame}{Multidimensional Nets in Verilog}
+\begin{frame}[fragile]{Multidimensional Nets in Verilog}
 	\begin{itemize}
 		\item It is often useful to have a net organized as a two-dimensional net to make indexing easier; this is particularly useful in any memory structure.
 		\item Syntax: \texttt{reg [M:0] <netname> [N:0]}
 		\item The line above creates a net called \texttt{<netname>} and describes it as an array of (N+1) elements, where each element is a (M+1) bit number.
 	\end{itemize}
+
+\begin{minted}[fontsize=\scriptsize]{verilog}
+// A memory structure that has eight 32-bit elements
+reg [31:0] fifo_ram [7:0];
+fifo_ram[2] // The full 3rd 32-bit element
+fifo_ram[5][7:0] // The lowest byte of the 6th 32-bit element
+\end{minted}
 \end{frame}
 
 \begin{frame}{Memory Module Design Example}{High-Level Spec}
@@ -661,7 +671,7 @@ end
 
 	Initial blocks are primarily used for test benches.
 	They contain sequences of code to be executed at the beginning of the simulation.
-	The delay operator (\texttt{\#}) and at operator (\texttt{\@{}}) are used in the inital block to step through time events.
+	The delay operator (\texttt{\#}) and at operator (\texttt{@}) are used in the inital block to step through time events.
 
 	\begin{minted}[fontsize=\tiny]{verilog}
 	`define clock_period 5
