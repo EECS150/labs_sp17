@@ -169,23 +169,23 @@ or (f, a, b);
 
 \begin{frame}{Designing the Full Adder}{Gate-Level Circuit}
 \begin{figure}[H]
-\centering
-\includegraphics{full_adder_gates.pdf}
+\centering\includegraphics[width=5cm]{full_adder_schematic.png}
 \end{figure}
 \end{frame}
 
 \begin{frame}[fragile]{Designing the Full Adder}{Using Structural Verilog}
 \begin{minted}[fontsize=\scriptsize]{verilog}
-module full_adder (input x, input y, input cin, output s, output cout);
-	xor(cout, x, y, cin);
+module full_adder (input a, input b, input cin, output s, output cout);
+	xor(s, a, b, cin);
 	
-	wire and_x_y;
-	wire and_y_cin;
-	wire and_x_cin;
-	and (and_x_y, x, y);
-	and (and_y_cin, y, cin);
-	and (and_x_cin, x, cin);
-	or (s, and_x_y, and_y_cin, and_x_cin);
+	wire xor_a_b;
+	wire cin_and;
+	wire and_a_b;
+	
+	xor(xor_a_b, a, b);
+	and(cin_and, cin, xor_a_b);
+	and(and_a_b, a, b);
+	or(cout, and_a_b, cin_and);
 endmodule
 \end{minted}
 \end{frame}
@@ -276,8 +276,8 @@ assign f = { 32{d[5]} }; // Replication + Indexing
 \begin{frame}[fragile]{Designing the Full Adder}{Using Behavioral Verilog}
 \begin{minted}[fontsize=\scriptsize]{verilog}
 module full_adder (input x, input y, input cin, output s, output cout);
-	assign cout = x ^ y ^ cin;
-	assign s = (x && y) || (x && cin) || (y && cin);
+	assign s = x ^ y ^ cin;
+	assign cout = (a && b) || (cin && (a ^ b));
 endmodule
 \end{minted}
 This is much better than the structural Verilog representation of a full adder! The Verilog synthesizer can take this opportunity to optimize logic expressions.
@@ -297,7 +297,7 @@ assign result = operand1 + operand2;
 We just described a 32-bit adder, but didn't specify the architecture or the logic! The Verilog synthesizer will turn the generalized adder into a FPGA specific netlist or an ASIC gate-level netlist.
 \end{frame}
 
-\begin{frame}[fragile]{Conditional Operator ?:}
+\begin{frame}[fragile]{Conditional (Ternary) Operator ?:}
 	\begin{itemize}
 		\item The conditional operator allows us to define if-else logic in an assign statement.
 		\item Syntax: (condition) ? (expression if condition is true) : (expression if condition is false)

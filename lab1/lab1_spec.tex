@@ -157,6 +157,8 @@ Finally, inspect the \verb|ml505top.v| top-level module and see how your structu
 
 Run \verb|make| in the \verb|/lab1| directory and let the build process complete. Then run \verb|make impact| to send your design to the FPGA. Test out your design and see that you get the correct results from your adder. You should try entering different binary numbers into your adder with the DIP switches and see that the correct sum is displayed on the GPIO LEDs. 
 
+\textbf{It is highly recommended that you run 'make report', and check under 'Synthesis Messages' to see if there are any warnings that indicate problems with your design.}
+
 \subsection{Inspection of Structural Adder Using Schematic and fpga\_editor}
 Now let's take a look at how the Verilog you wrote mapped to the primitive components on the FPGA. To do this, we will first look at a high-level schematic of your circuit using Xilinx ISE.
 
@@ -246,7 +248,7 @@ Now, knowing how many clock cycles equals one cycle of the square wave, you can 
 
 Add an output to \verb|ml505top.v| with a matching net name to the piezo net you declared in the UCF. Instantiate the \verb|tone_generator| and connect it to the piezo output.
 
-Now \verb|make| and \verb|make report|. Check for any warnings or errors and try to fix them. Ask a TA if you need help here. When everything looks good run \verb|make impact|. You should now hear a buzzing noise at 440Hz.
+Now \verb|make| and \verb|make report|. Check for any warnings or errors and try to fix them. Ask a TA if you need help here. When everything looks good run \verb|make impact|. You should now hear a buzzing noise at 440Hz. To stop the buzzing, you can erase the design on the FPGA by pressing the leftmost button right above the PCI-e finger (to the right of the DVI connector).
 
 \subsection{Switching the Wave On and Off}
 Now you have a tone, but it can't be toggled on and off without pulling the power to the FPGA board. Let's use the \verb|output_enable| input of the \verb|tone_generator| module to gate the square wave output. When \verb|output_enable| is 0, you should pass 0 to the \verb|square_wave_out| output, but when \verb|output_enable| is 1, you should pass your full square wave to \verb|square_wave_out|. You can accomplish this by adding a wire in your module which holds the square wave signal, and then using an assign ternary statement to assign \verb|square_wave_out| based on the value of \verb|output_enable|.
@@ -254,6 +256,8 @@ Now you have a tone, but it can't be toggled on and off without pulling the powe
 Wire up the \verb|output_enable| signal to the first DIP switch (\verb|GPIO_DIP[0]|) in \verb|ml505top|.
 
 Now \verb|make| and \verb|make report|. Check for any warnings or errors and try to fix them. Ask a TA if you need help here. When everything looks good run \verb|make impact|. You should now hear a buzzing noise at 440Hz that can be turned on or off by toggling the first DIP switch.
+
+You should verify that the tone is indeed 440 Hz by comparing it to a reference tone here: \url{http://onlinetonegenerator.com/}.
 
 \section{Optional: Use Remaining Switches to Control Frequency or Duty Cycle}
 This part is completely optional and is self-directed. You can use the remaining 7 DIP switches as inputs into your \verb|tone_generator| and can use those switches to encode a binary number that represents a particular duty cycle for your square wave or a particular range of frequencies. Show that these switches give you control over the duty cycle or frequency of your square wave output to the piezo speaker.
