@@ -151,7 +151,7 @@ All of this information is dense and complex. Don't worry about understanding th
 \subsection{Build a Structural 8-bit Adder}
 To help you with this task, please refer to the 'Code Generation with for-generate loops' slide in the Verilog Primer Slides (slide 35).
 
-Navigate to the \verb|/lab1/src| directory. Begin by opening \verb|full_adder.v| and fill in the logic to produce the full adder outputs from the inputs. Then open \verb|structural_adder.v| and construct a ripple carry adder using the full adder cells you designed earlier. You can manually instantiate four instances of the full adder cell or you can use a for-generate statement. You can add as many internal wires to your module as you need.
+Navigate to the \verb|/lab1/src| directory. Begin by opening \verb|full_adder.v| and fill in the logic to produce the full adder outputs from the inputs. Then open \verb|structural_adder.v| and construct a ripple carry adder using the full adder cells you designed earlier. You can manually instantiate eight instances of the full adder cell or you can use a for-generate statement. You can add as many internal wires to your module as you need.
 
 Finally, inspect the \verb|ml505top.v| top-level module and see how your structural adder is instantiated and hooked up to the top-level signals. For now, just look at the \verb|user_adder| instance of your structural adder.
 
@@ -173,6 +173,12 @@ Now let's take a look at how your circuit was placed and laid out on the FPGA wi
 	DISPLAY=:0 fpga_editor ml505top.ncd ml505top.pcf
 \end{minted}
 
+If you get an error that states something like 'Can't open display' when running \verb|fpga_editor|, try running the command again without the \verb|DISPLAY=:0| prefix like this:
+
+\begin{minted}{bash}
+	fpga_editor ml505top.ncd ml505top.pcf
+\end{minted}
+
 \begin{center}
 	\includegraphics[width=\textwidth]{images/fpga_editor_1.png}
 \end{center}
@@ -190,7 +196,7 @@ The image above shows the main view for the FPGA editor. It is split up into the
 
 Now you can explore your design and look for the modules that you wrote. If you scroll down in the \verb|List Window| you will find that the type of some items is SLICEL.
 
-Recall that SLICELs contain the look-up tables that actually implement the logic you want. Double clicking on the SLICEL named \verb|structural_out<1>| will take you to the corresponding SLICEL in your Array Window. Double click on the red rectangle (the SLICEL) to bring up the following Block Window:
+Recall that SLICELs contain the look-up tables that actually implement the logic you want. Double clicking on the SLICEL named \verb|structural_out<x>| (where x is some number) will take you to the corresponding SLICEL in your Array Window. Double click on the red rectangle (the SLICEL) to bring up the following Block Window:
 
 \begin{center}
 	\includegraphics[width=\textwidth]{images/fpga_editor_2.png}
@@ -206,7 +212,7 @@ In \verb|ml505top.v|, you can see that the \verb|structural_adder| and the \verb
 
 \subsection{Inspection of Behavioral Adder Using Schematic and fpga\_editor}
 
-Go through the same steps as you did for inspecting the structural adder. First run \verb|make schematic| and then run the FPGA editor. In the FPGA editor, inspect the \verb|behavioral_out<.>| SLICE and the \verb|behavioral_test_adder/Madd...| SLICE. Record and note down any differences you see between both types of adders in the schematic and the FPGA editor. You will be asked for some observations during checkoff.
+Go through the same steps as you did for inspecting the structural adder. First run \verb|make schematic| and then run the FPGA editor. In the FPGA editor, inspect the \verb|behavioral_out<x>| SLICE and the \verb|behavioral_test_adder/Madd...| SLICE. Record and note down any differences you see between both types of adders in the schematic and the FPGA editor. You will be asked for some observations during checkoff.
 
 \section{Designing a Tone Generator}
 Now it's time to try something new. Let's create a tone generator/buzzer on the FPGA.
