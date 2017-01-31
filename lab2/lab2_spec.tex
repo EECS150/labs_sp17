@@ -1,0 +1,363 @@
+\documentclass[11pt]{article}
+
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{graphicx}
+% formatting
+\usepackage{fullpage}
+\usepackage{verbatim}
+\usepackage{moreverb}
+\usepackage{minted}
+\usepackage{parskip}
+\let\verbatiminput=\verbatimtabinput
+\def\verbatimtabsize{4\relax}
+
+\begin{document}
+\title{EECS 151/251A FPGA Lab\\
+Lab 2: Simulation, Inter-module Communication, and Memories}
+
+\author{Prof. Elad Alon \\
+TAs: Vighnesh Iyer, Bob Zhou \\Department of Electrical Engineering and Computer Sciences\\
+College of Engineering, University of California, Berkeley}
+\date{}
+\maketitle
+
+\section{Before You Start This Lab}
+
+Before you proceed with the contents of this lab, we suggest that you look through three documents that will help you better understand some Verilog constructs.
+
+\begin{enumerate}
+	\item \textbf{labs\_sp17/docs/Verilog/wire\_vs\_reg.pdf} - The differences between wire and reg nets and when to use each of them.
+	
+	\item \textbf{labs\_sp17/docs/Verilog/always\_at\_blocks.pdf} - Understanding the differences between the two types of always @ blocks and what they synthesize to.
+	
+	\item \textbf{labs\_sp17/docs/Verilog/verilog\_fsm.pdf} - An overview of how to create finite state machines in Verilog, specifying their state transitions and machine outputs.
+
+\end{enumerate}
+
+The first couple sections of this lab focus on simulation and it would be valuable to read the first two documents before starting.
+
+\subsection{Helpful Hint: Synthesis Warnings and Errors}
+At various times in this lab, things will just not work on the FPGA or in simulation. To help with debugging, you can run \verb|make synth| in the \verb|lab2/| folder. This will just run \verb|xst| (Synthesis) which will only take a few seconds. Then you should run \verb|make report|. In the window that opened, click on \verb|Synthesis Messages| on the left under \verb|Errors and Warnings|. Any synthesis warnings you see here are an alert to a possible issue in your circuit. If you don't understand a warning, ask a TA; it could reveal some issue in your Verilog.
+
+\section{Lab Overview}
+
+In this lab, we will begin by taking your \verb|tone_generator| design from Lab 1 and simulating it in software. We will learn how to use ModelSim to view waveforms and debug your circuits. You will then extend your \verb|tone_generator| to play a configurable frequency square wave and simulate it to check that you have implemented the functionality correctly. You will then construct a module that can pull tones to play from a memory block and send them to your \verb|tone_generator|.
+
+\section{Simulating the tone\_generator from Lab 1}
+
+\subsection{Copying Your Lab 1 Code}
+
+Run \verb|git pull| in your git cloned \verb|labs_sp17| directory to fetch the latest skeleton files.
+
+Begin by copying your \verb|tone_generator| implementation into the \verb|lab2/tone_generator.v| file. \textbf{Don't change the module port declaration.} You can leave the \verb|input [23:0] tone_switch_period| unused for now.
+
+Let's run some simulations on the \verb|tone_generator| in software. To do this, we will need to use a Verilog testbench. A Verilog testbench is designed to test a Verilog module by supplying it with the inputs it needs (stimulus signals) and testing whether the outputs of the module match what we expect.
+
+\subsection{Overview of Testbench Skeleton}
+Check the provided testbench skeleton in \verb|lab2/tone_generator_testbench.v| to see the test written for the \verb|tone_generator|. Let's go through what every line of this testbench does.
+
+\begin{minted}{verilog}
+`timescale 1ns/1ns
+`timescale (simulation step time)/(simulation resolution)
+\end{minted}
+
+The timescale declaration needs to be at the top of every testbench file. It provides information to the circuit simulator about the timing parameters of the simulation.
+
+The first argument to the timescale declaration is the simulation step time. It defines the chunks of discrete time in which the simulation should proceed. In this case, we have defined the simulation step time to be one nanosecond. This means that we can advance the simulation time by as little as 1ns at a time.
+
+The second argument to the timescale declaration is the simulation resolution. In our example it is also 1ns. The resolution allows the simulator to model transient behavior of your circuit in between simulation time steps. For this lab, we aren't modeling any gate delays, so the resolution can equal the step time.
+
+\begin{minted}{verilog}
+`define SECOND 1000000000
+`define MS 1000000
+// The SAMPLE_PERIOD corresponds to a 44100 kHz sampling rate
+`define SAMPLE_PERIOD 22675.7
+\end{minted}
+
+These are some macros defined for our testbench. They are constant values you can use when writing your testbench to simplify your code and make it obvious what certain numbers mean. For example, \verb|SECOND| is defined as the number of nanoseconds in one second. The \verb|SAMPLE_PERIOD| is the sampling period used to sample the square wave output of the \verb|tone_generator| at a standard 44100 kHz sample rate.
+
+\begin{minted}[tabsize=4]{verilog}
+module tone_generator_testbench();
+	// Testbench code goes here
+endmodule
+\end{minted}
+
+This module is our testbench module. It is not actually synthesized to be placed on our FPGA, but rather it is to be run by our circuit simulator. All your testbench code goes in this module. We will instantiate our DUT (device under test) in this module.
+
+\begin{minted}{verilog}
+reg clock;
+reg output_enable;
+reg [23:0] tone_to_play;
+wire sq_wave;
+\end{minted}
+
+Here are the inputs and outputs of our \verb|tone_generator|. You will notice that the inputs to the \verb|tone_generator| are declared as \verb|reg| type nets and the outputs are declared as \verb|wire| type nets. This is because we will be driving the inputs in our testbench and we will be monitoring the output.
+
+\begin{minted}{verilog}
+initial clock = 0;
+always #(30.3/2) clock <= ~clock;
+\end{minted}
+
+Here is our clock signal generation code. The clock signal needs to be generated in our testbench so it can be fed to the DUT. The initial statement sets the value of the clock net to 0 at the very start of the simulation. The next line toggles the clock signal such that it oscillates at 33Mhz.
+
+\begin{minted}[tabsize=4]{verilog}
+tone_generator piezo_controller (
+    .clk(clock),
+    .output_enable(output_enable),
+	.tone_switch_period(tone_to_play),
+    .square_wave_out(sq_wave)
+);
+\end{minted}
+
+Now we instantiate the DUT and connect its ports to the nets we have access to in our testbench.
+
+\begin{minted}[tabsize=4]{verilog}
+initial begin
+    output_enable <= 0;
+    #(10 * `MS);
+    output_enable <= 1;
+    
+    tone_to_play <= 24'd37500;
+    #(200 * `MS);
+   
+    ...
+    $finish();
+end
+\end{minted}
+
+Here is the body of our testbench. The \verb|initial begin ... end| block specifies the 'main()' function for our testbench. It is the execution entry point for our simulator. In the \verb|initial| block, we can set the inputs that flow into our DUT using non-blocking (\verb|<=|) assignments.
+
+We can also order the simulator to advance simulation time using delay statements. A delay statement takes the form \verb|#(delay in time steps);|. For instance the statement \verb|#(100);| would run the simulation for 100ns.
+
+In this case, we set \verb|output_enable| to 0 at the start of the simulation, then we let the simulation run for 10ms, then we set \verb|output_enable| to 1. We then change the \verb|tone_to_play| several times, and give the \verb|tone_generator| some time to produce the various tones. For now, the \verb|tone_to_play| signal won't affect your \verb|tone_generator| which should only be playing a fixed 440 Hz tone.
+
+The final statement is a system function: the \verb|$finish()| function tells the simulator to halt the simulation.
+
+\begin{minted}[tabsize=4]{verilog}
+integer file;
+initial begin
+	file = $fopen("output.txt", "w");
+	forever begin
+		$fwrite(file, "%h\n", sq_wave);
+		#(`SAMPLE_PERIOD);
+	end
+end
+\end{minted}
+
+This piece of code is written in a separate \verb|initial begin ... end| block. The simulator treats both blocks as separate threads that both start execution at the beginning of the simulation and operate in parallel.
+
+This block of code uses two system functions \verb|$fopen() and $fwrite()|, that allow us to write to a file. The \verb|forever begin| construct tells the simulator to run the chunk of code inside it continuously until the simulation ends.
+
+In the \verb|forever begin| block, we sample the \verb|square_wave_out| output of the \verb|tone_generator| and save it in a file. We sample this value every \verb|`SAMPLE_PERIOD| nanoseconds which corresponds to a 44100 kHz sampling rate. Your \verb|tone_generator|'s output is stored as 1s and 0s in a text file that can be translated to sound to hear how your circuit will sound when deployed on the FPGA.
+
+\subsection{Using TCL scripts (.do files)}
+
+\textbf{ModelSim}, which is our circuit simulator, takes commands from TCL scripts. Take a look at the \verb|lab2/sim/tests/tone_generator_testbench.do| TCL script. Here is a quick description of what is instructs our simulator to do.
+
+\begin{minted}{tcl}
+start tone_generator_testbench
+add wave tone_generator_testbench/*
+add wave tone_generator_testbench/piezo_controller/*
+run 10000ms
+\end{minted}
+
+We begin by issuing the \verb|start| command to the simulator. This instructs the simulator to scan a list of Verilog source files provided to it to find a module named \verb|tone_generator_testbench|. This module name must exactly match the module name of your top-level testbench module. The simulator loads and elaborates this module so that its ready to simulate/execute.
+
+The two \verb|add_wave| commands are important. By default, the simulator will not log the signals in our testbench or DUT as the simulation executes. The \verb|add wave tone_generator_testbench/*| line tells the simulator to log all signals directly inside in the \verb|tone_generator_testbench| module. The second line tells the simulator to log the signals in a submodule of the top-level testbench module. Observe that \verb|piezo_controller| is the instance name of the \verb|tone_generator| instance in the testbench module.
+
+Finally, the \verb|run (time)| command tells the simulator to jump to the \verb|initial begin| blocks in the testbench and actually run the simulation. The time value (in our case 10000ms = 10s) gives the simulator an upper bound on the simulation time. The simulator will simulate for 10 seconds before timing out. If the simulator hits the \verb|$finish()| function before the 10 second timeout is up, it will stop simulation instantly.
+
+\subsection{Running ModelSim}
+
+With all the details out of the way, let's actually run a simulation. Go to the \verb|lab2/sim| directory and run \verb|make|. After a minute or so, the simulation will finish.
+
+\subsection{Viewing Waveforms}
+
+Let's take a look at the data that the simulator collected. Run the viewwave script like this:
+
+\verb|./viewwave results/tone_generator_testbench.wlf &|
+
+The results of the simulation and the logged signals are stored in a \verb|.wlf| file. This command should open that file in the ModelSim Wave Viewer.
+
+You should see a window like this:
+
+\includegraphics[width=\textwidth]{images/modelsim.png}
+
+Let's go over the basics of ModelSim. The boxed screens are:
+
+\begin{enumerate}
+	\item List of the module involved in the testbench. You can select one of these to have its signals show up in the object window.
+	\item \textbf{Object Window} - this lists all the wires and regs in your module. You can add signals to the waveform view by selecting them, right-clicking, and doing \verb|Add Wave|.
+	\item \textbf{Waveform Viewer} - The signals that you add from the object window show up here. You can navigate the waves by searching for specific values or going forward or backward one transition at a time. The x-axis represents time.
+\end{enumerate}
+
+You may not see the \textbf{Waveform Viewer} when you first open ModelSim. To add signals to view, right click on the signal in the \textbf{Object Window}, and click on \verb|Add Wave|. Add the \verb|clock, output_enable,| and \verb|sq_wave| signals to the waveform viewer.
+
+Here are a few useful shortcuts:
+
+\begin{enumerate}
+	\item \textbf{Click on waveform}: Sets cursor position
+	\item \textbf{O}:
+\end{enumerate}
+
+Click anywhere on the waveform viewer to set your cursor and use the \verb|O| and \verb|I| keys to zoom in and out. Zoom out all the way.
+
+You should be able to see the clock oscillate at the frequency specified in the testbench. You should also see the \verb|output_enable| signal start at 0 and then become 1 after 500 ms. However, you will see that the \verb|sq_wave| signal is just a red line. What's going on?
+
+\subsection{Fixing the Undefined clock\_counter}
+
+Take a look at the \verb|clock_counter| in your \verb|tone_generator| module. Plot the signal in your waveform viewer. You will notice it's also a red line. Red lines in ModelSim indicate undefined signals (indicated in Verilog as the letter \verb|x|). \\
+
+Blue lines in ModelSim indicate high-impedance (unconnected) signals. High-impedance is defined in Verilog as the letter \verb|z|. We won't be using high-impedance signals in our designs, but blue lines in ModelSim indicate something in our testbench isn't wired up properly.\\
+
+Going back to the red line for \verb|clock_counter|: this is caused because at the start of simulation, the value sitting inside the \verb|clock_counter| register is unknown. It could be anything! Since we don't have an explicit reset signal for our circuit to bring the \verb|clock_counter| to a defined value, it is unknown for the entire simulation.\\
+
+Let's fix this. In the future we will use a reset signal, but for now let's use a simpler technique. In \verb|lab2/tone_generator.v| modify the \verb|reg [x:0] clock_counter| line to read \verb|reg [x:0] clock_counter = 0| instead. This implicitly tells the simulator that the initial simulation value for this register should be 0. For this lab, when you add new registers in your \verb|tone_generator| or any other design module, you should instantiate them to their default value in the same way.\\
+
+Now run the simulation again.
+
+\subsubsection{Helpful Tip: Reloading ModelSim .wlf}
+
+When you re-run your simulation and you want to plot the newly generated signals in ModelSim, you don't need to close and reopen ModelSim. Instead click on the 'Reload' button on the top toolbar which is to the right of the 'Save' button.
+
+\subsection{Listen to Your Square Wave Output}
+
+Take a look at the file written by the testbench located at \verb|lab2/sim/build/output.txt|. It should be a sequence of 1s and 0s that represent the output of your \verb|tone_generator|. I've written a Python script that can take this file and generate a \verb|.wav| file that you can listen to.\\
+
+Go to the \verb|lab2/| directory and run the command:\\
+
+\verb|python audio_from_sim.py sim/build/output.txt|\\
+
+This will generate a file called \verb|output.wav|. Run this command to play it:\\
+
+\verb|play output.wav|
+
+You should hear a 440Hz square wave for 1 second after half a second of silence.
+
+\subsection{Playing with the Testbench}
+
+Play around with the testbench by altering the clock frequency, changing when you turn on \verb|output_enable| and verify that you get the audio you expect. For checkoff be able to answer the following question and demonstrate understanding of basic simulation
+
+\begin{enumerate}
+	\item If you increase the clock frequency, would you expect the tone generated by your \verb|tone_generator| to be of higher pitch or lower pitch from 440Hz? Why? Show audio evidence of this from the simulation.
+\end{enumerate}
+
+\section{Design a Configurable Frequency tone\_generator}
+
+Let's extend our \verb|tone_generator| so that it can play different notes. Add a 24-bit input to the \verb|tone_generator| module called \verb|tone_switch_period|. Note you will also have to modify your \verb|clock_counter| to be 24 bits wide.\\
+
+The \verb|tone_switch_period| describes how many clock cycles you should hold the value of your square wave output before inverting it. For example a \verb|tone_switch_period| of 37500 tells us to invert the square wave output every 37500 clock cycles, which for a 33 Mhz clock translates to a 440 Hz square wave.\\
+
+You may have to modify the architecture of your \verb|tone_generator| to accommodate this new input signal. You should reset the internal \verb|clock_counter| every \verb|tone_switch_period| cycles and should also invert the square wave output. Remember to initialize any new registers declared in your \verb|tone_generator| to their default value to prevent unknowns during simulation.
+
+\textbf{It is highly recommended that you draw the circuit you are about to implement before you write the code for it. Show the TA a schematic of the proposed circuit to verify that it matches the specification.}
+\section{Simulating and Debugging Your New tone\_generator}
+
+Now, extend the testbench to work with this new input signal. Add a new 24-bit reg to the testbench. Set \verb|output_enable| to 1 at the start of the simulation. Then set the \verb|tone_switch_period| of the DUT and run the simulation for some time (using a delay statement). Then change the \verb|tone_switch_period| again and run the simulation for some more time.\\
+
+Inspect the waveform and debug your \verb|tone_generator| if you detect any bugs. Then use the same Python script to generate an audio file to listen to your \verb|tone_generator|.
+
+I suggest using \url{http://onlinetonegenerator.com/} to generate sample square wave tones and making sure your tones match.\\
+
+Create a testbench that plays some simple melody that you define and show the TA before proceeding further.
+
+\section{Try the tone\_generator on the FPGA}
+Modify the top-level Verilog module \verb|ml505top.v| to include the new input to the \verb|tone_generator|. You can tie the \verb|tone_switch_period| to any value you want.
+
+Run the usual \verb|make| process and then \verb|make impact| to put your new \verb|tone_generator| on the FPGA. It should work as it did before.
+
+\section{Introduction to Inferred Asynchronous Memories - ROMs}
+An asynchronous memory is a memory block that isn't governed by a clock. In this lab, we will use a Python script to generate a ROM block in Verilog.\\
+
+A ROM is a read-only memory. A ROM can be broadly classed as a state element that holds some fixed data. This data can be accessed by supplying an address to the ROM after which the ROM will output the data from that address. Any memory block in general can contain as many addresses in which to store data as you desire. Every address should contain the same amount of data (bits). The number of addresses is called the \textbf{depth} of the memory, while the number of bits per address is called the \textbf{width} of the memory. These are important terms that are frequently used. \\
+
+The synthesizer is a powerful tool that takes the Verilog you write and converts it into a low-level netlist of the structures are actually used on the FPGA. Our Verilog \textbf{describes} the functionality of some digital circuit and the synthesizer \textbf{infers} what that functional description actually represents. In this section, we will examine the Verilog that allows the synthesizer (XST) to \textbf{infer} a ROM. What follows is a minimal example of a ROM in Verilog: (depth of 8 entries/addresses, width of 8 bits)
+
+\begin{minted}{verilog}
+module rom (input [2:0] address, output reg [7:0] data);
+	always @(*) begin
+		case(address)
+			3'd0: data = 8'h00;
+			3'd1: data = 8'hFF;
+			3'd2: data = 8'hAD;
+			3'd3: data = 8'h12;
+			3'd4: data = 8'h37;
+			3'd5: data = 8'h93;
+			3'd6: data = 8'h0A;
+			3'd7: data = 8'hC2;
+		endcase
+	end
+endmodule
+\end{minted}
+
+To power our \verb|tone_generator|, we will be using a ROM that is X entries/addresses deep and 24 bits wide. The ROM will contain tones that the \verb|tone_generator| will play. You can choose the depth of your ROM based on the length of the sequence of tones you want to play.
+
+To generate a ROM with a script, first begin by creating a file that will define the memory contents. The file should contain a decimal number on each line which represents the data stored at that address (line number). I've provided an example file called \verb|sample_data.txt| in the \verb|lab2/| folder. Each line of this file represents the \verb|tone_switch_period| of a single note. The duration of each note will be specified later.
+
+Use the provided Python script to generate a ROM Verilog file (run in \verb|lab2/|):
+
+\begin{minted}{bash}
+	python rom_generator.py src/rom.v sample_data.txt 128 24
+\end{minted}
+
+This will generate a ROM in \verb|lab2/src/rom.v| using the data from \verb|sample_data.txt| with a width of 24 bits and a depth of 128 entries/addresses. Try it out and make sure you understand what the script is doing. Take a look at \verb|rom.v| and inspect its contents. Since \verb|sample_data.txt| doesn't contain 128 lines, the undefined memory addresses are filled with zeros.
+
+You can edit \verb|sample_data.txt| to fill it with your own melody. We will explore ways of generating a ROM/RAM from an initialization file using Verilog alone in a future lab.\\
+
+You might want to try instantiating your memory in \verb|ml505top.v| and putting your design on the FPGA to see how the memory works.
+
+\begin{minted}{verilog}
+module ml505top (
+	input  CLK_33MHZ_FPGA,
+	input  [7:0] GPIO_DIP,
+	output PIEZO_SPEAKER,
+	output [7:0] GPIO_LED
+);    
+	tone_generator piezo_controller (
+		.clk(CLK_33MHZ_FPGA),
+		.output_enable(GPIO_DIP[0]),
+		.square_wave_out(PIEZO_SPEAKER)
+	);
+
+	rom memory (
+		.address(GPIO_DIP[6:0]),
+		.data(GPIO_LED[7:0])
+	);
+endmodule
+\end{minted}
+
+You can toggle the DIP switches and see the 8 LEDs light up with the lowest byte of the data in the address specified by the switches.
+\section{Design of the music\_streamer}
+Open up the \verb|music_streamer.v| file. This module will contain an instance of the ROM you created earlier and will address the ROM sequentially to play tones. The \verb|music_streamer| will play each note for a predefined amount of time by sending each switch period defined in the ROM to the \verb|tone_generator|.\\
+
+\textbf{Read this entire section, then... You should calculate what 1/5th of a second is in terms of 33 Mhz clock cycles. Verify with the TA that you got the right answer. Then, before writing any Verilog, draw a schematic of the music\_streamer circuit. Show your circuit to the TA before proceeding.}\\
+
+Let's proceed incrementally to integrate and design the \verb|music_streamer|.
+
+Begin by instantiating the \verb|music_streamer| module in \verb|ml505top.v|. Connect its \verb|tone| output to the \verb|tone_switch_period| input of the \verb|tone_generator|. Connect its \verb|clk| input to the global clock signal. You can leave the \verb|tempo and pause| inputs unconnected for the time being.\\
+
+Now let's begin the design of the \verb|music_streamer| itself. Instantiate your ROM in the \verb|music_streamer| and connect the ROM's address and data ports to wire or reg nets that you create in your module. Next, write the RTL that will increment the address supplied to the ROM every \textbf{1/5th seconds}. The data coming out of the ROM should be fed directly to the \verb|tone_generator|. The ROM's address input should go from 0 to the depth of the ROM and should then loop around back to 0. You don't have a reset signal, so define the initial state of any registers in your design for simulation purposes.
+
+\section{Simulating the music\_streamer}
+To simulate your \verb|music_streamer| add an instance of it to your \verb|tone_generator_testbench|. Wire it up to the \verb|tone_generator| just like you had it in \verb|ml505top.v|. Then make sure you drive \verb|output_enable| to the \verb|tone_generator| to 1 at the start of simulation. Then insert a delay statement to let the simulation run for as long as you desire. Finally run \verb|make| in the \verb|lab2/sim| directory.\\
+
+Inspect your waveform to make sure you get what you expect. It will likely be helpful to add a line to the \verb|.do| file in \verb|lab2/sim/tests| so that you can inspect the internal signals of your \verb|music_streamer|. Then, run the Python script to generate a \verb|.wav| file of your simulation results and listen to your \verb|music_streamer| in action.
+
+\section{Verify your Code to Works For Rest Notes}
+In simulation, you can often catch bugs that would be difficult or impossible to catch by running your circuit on the FPGA. You should verify that if your ROM contains an entry that is zero (meaning generate a 0Hz wave), that the \verb|tone_generator| doesn't produce any oscillating output. Verify this in simulation. We will be using this functionality in the next lab when playing sheet music with the \verb|music_streamer|.
+
+\section{Try it on the FPGA!}
+Now try your \verb|music_streamer| on the FPGA. You should expect the output to be the same as in simulation. The GPIO\_DIP switch should still work to disable the output of the \verb|tone_generator|. \textbf{Show your final results, simulation, and the working design on the FPGA to the TA for checkoff.}
+
+\section{Optional: Adding Tempo Variations and Pausing to the music\_streamer}
+In the next lab, we will be making our \verb|music_streamer| more full-featured. If you have time now, you can implement some of these features.\\
+
+Connect a GPIO\_DIP switch to the \verb|pause| input of the \verb|music_streamer|. When this switch is turned on, your module should pause the music at the current note and should cut the output to the piezo speaker. When the switch is turned off, your module should resume playback.
+
+Connect a pair of GPIO\_DIP switches to the \verb|tempo| input of the \verb|music_streamer|. When these switches are toggled, your \verb|music_streamer| should play the notes faster or slower. Basically, you can define four different tempos that hold each note for a different amount of time. We choose a standard 1/5th of a second for this lab, but you can vary it from 1/10, 1/7, 1/5, 1/3 to change tempos of your music on the fly.
+
+\section{Conclusion}
+You are done with lab 2! Please write down any and all feedback and criticism of this lab and share it with the TA. This is a brand new lab and I welcome everyone's input so that it can be improved.
+
+\end{document}
