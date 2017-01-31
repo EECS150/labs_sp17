@@ -1,0 +1,54 @@
+NET GPIO_DIP<0>         LOC="U25";   # Bank 15, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_DIP<1>         LOC="AG27";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_DIP<2>         LOC="AF25";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_DIP<3>         LOC="AF26";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_DIP<4>         LOC="AE27";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_DIP<5>         LOC="AE26";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_DIP<6>         LOC="AC25";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_DIP<7>         LOC="AC24";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+
+NET GPIO_DIP<0>         IOSTANDARD="LVCMOS18";
+NET GPIO_DIP<1>         IOSTANDARD="LVCMOS18";
+NET GPIO_DIP<2>         IOSTANDARD="LVCMOS18";
+NET GPIO_DIP<3>         IOSTANDARD="LVCMOS18";
+NET GPIO_DIP<4>         IOSTANDARD="LVCMOS18";
+NET GPIO_DIP<5>         IOSTANDARD="LVCMOS18";
+NET GPIO_DIP<6>         IOSTANDARD="LVCMOS18";
+NET GPIO_DIP<7>         IOSTANDARD="LVCMOS18";
+
+NET GPIO_LED<0>         LOC="H18";   # Bank 3, Vcco=2.5V, No DCI
+NET GPIO_LED<1>         LOC="L18";   # Bank 3, Vcco=2.5V, No DCI
+NET GPIO_LED<2>         LOC="G15";   # Bank 3, Vcco=2.5V, No DCI
+NET GPIO_LED<3>         LOC="AD26";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_LED<4>         LOC="G16";   # Bank 3, Vcco=2.5V, No DCI
+NET GPIO_LED<5>         LOC="AD25";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_LED<6>         LOC="AD24";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_LED<7>         LOC="AE24";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+#NET GPIO_LED_C          LOC="E8";    # Bank 20, Vcco=3.3V, DCI using 49.9 ohm resistors
+#NET GPIO_LED_E          LOC="AG23";  # Bank 2, Vcco=3.3V
+#NET GPIO_LED_N          LOC="AF13";  # Bank 2, Vcco=3.3V
+#NET GPIO_LED_S          LOC="AG12";  # Bank 2, Vcco=3.3V
+#NET GPIO_LED_W          LOC="AF23";  # Bank 2, Vcco=3.3V
+
+NET GPIO_LED<0>         IOSTANDARD="LVCMOS25";
+NET GPIO_LED<1>         IOSTANDARD="LVCMOS25";
+NET GPIO_LED<2>         IOSTANDARD="LVCMOS25";
+NET GPIO_LED<3>         IOSTANDARD="LVCMOS18";
+NET GPIO_LED<4>         IOSTANDARD="LVCMOS25";
+NET GPIO_LED<5>         IOSTANDARD="LVCMOS18";
+NET GPIO_LED<6>         IOSTANDARD="LVCMOS18";
+NET GPIO_LED<7>         IOSTANDARD="LVCMOS18";
+#NET GPIO_LED_C          IOSTANDARD="LVCMOS33";
+#NET GPIO_LED_E          IOSTANDARD="LVCMOS33";
+#NET GPIO_LED_N          IOSTANDARD="LVCMOS33";
+#NET GPIO_LED_S          IOSTANDARD="LVCMOS33";
+#NET GPIO_LED_W          IOSTANDARD="LVCMOS33";
+
+NET CLK_33MHZ_FPGA      LOC="AH17";  # Bank 4, Vcco=3.3V, No DCI
+NET CLK_33MHZ_FPGA      IOSTANDARD="LVCMOS33";
+
+NET "CLK_33MHZ_FPGA" TNM_NET = CLK_33MHZ_FPGA;
+TIMESPEC TS_USER_CLK = PERIOD "CLK_33MHZ_FPGA" 30.3 ns HIGH 50%;
+
+NET  PIEZO_SPEAKER        LOC="G30";   # Bank 15, Vcco=1.8V, DCI using 49.9 ohm resistors      
+NET  PIEZO_SPEAKER        IOSTANDARD="LVCMOS18";
