@@ -9,6 +9,7 @@
 \usepackage{moreverb}
 \usepackage{minted}
 \usepackage{parskip}
+\usepackage{amsmath}
 \let\verbatiminput=\verbatimtabinput
 \def\verbatimtabsize{4\relax}
 
@@ -22,6 +23,8 @@ College of Engineering, University of California, Berkeley}
 \date{}
 \maketitle
 
+\tableofcontents
+
 \section{Before You Start This Lab}
 
 Before you proceed with the contents of this lab, we suggest that you look through three documents that will help you better understand some Verilog constructs.
@@ -32,7 +35,6 @@ Before you proceed with the contents of this lab, we suggest that you look throu
 	\item \textbf{labs\_sp17/docs/Verilog/always\_at\_blocks.pdf} - Understanding the differences between the two types of always @ blocks and what they synthesize to.
 	
 	\item \textbf{labs\_sp17/docs/Verilog/verilog\_fsm.pdf} - An overview of how to create finite state machines in Verilog, specifying their state transitions and machine outputs.
-
 \end{enumerate}
 
 The first couple sections of this lab focus on simulation and it would be valuable to read the first two documents before starting.
@@ -50,7 +52,7 @@ In this lab, we will begin by taking your \verb|tone_generator| design from Lab 
 
 Run \verb|git pull| in your git cloned \verb|labs_sp17| directory to fetch the latest skeleton files.
 
-Begin by copying your \verb|tone_generator| implementation into the \verb|lab2/tone_generator.v| file. \textbf{Don't change the module port declaration.} You can leave the \verb|input [23:0] tone_switch_period| unused for now.
+Begin by copying your \verb|tone_generator| implementation into the \verb|lab2/src/tone_generator.v| file. \textbf{Don't change the module port declaration.} You can leave the \verb|input [23:0] tone_switch_period| unused for now.
 
 Let's run some simulations on the \verb|tone_generator| in software. To do this, we will need to use a Verilog testbench. A Verilog testbench is designed to test a Verilog module by supplying it with the inputs it needs (stimulus signals) and testing whether the outputs of the module match what we expect.
 
@@ -71,11 +73,11 @@ The second argument to the timescale declaration is the simulation resolution. I
 \begin{minted}{verilog}
 `define SECOND 1000000000
 `define MS 1000000
-// The SAMPLE_PERIOD corresponds to a 44100 kHz sampling rate
+// The SAMPLE_PERIOD corresponds to a 44.1 kHz sampling rate
 `define SAMPLE_PERIOD 22675.7
 \end{minted}
 
-These are some macros defined for our testbench. They are constant values you can use when writing your testbench to simplify your code and make it obvious what certain numbers mean. For example, \verb|SECOND| is defined as the number of nanoseconds in one second. The \verb|SAMPLE_PERIOD| is the sampling period used to sample the square wave output of the \verb|tone_generator| at a standard 44100 kHz sample rate.
+These are some macros defined for our testbench. They are constant values you can use when writing your testbench to simplify your code and make it obvious what certain numbers mean. For example, \verb|SECOND| is defined as the number of nanoseconds in one second. The \verb|SAMPLE_PERIOD| is the sampling period used to sample the square wave output of the \verb|tone_generator| at a standard 44.1 kHz sample rate.
 
 \begin{minted}[tabsize=4]{verilog}
 module tone_generator_testbench();
@@ -214,13 +216,23 @@ You should be able to see the clock oscillate at the frequency specified in the 
 
 \subsection{Fixing the Undefined clock\_counter}
 
-Take a look at the \verb|clock_counter| in your \verb|tone_generator| module, by clicking on \verb|piezo_controller| in the module. Plot the signal in your waveform viewer. You will notice it's also a red line. Red lines in ModelSim indicate undefined signals (indicated in Verilog as the letter \verb|x|).
+Take a look at the \verb|clock_counter|, by clicking on \verb|piezo_controller| in the module and \verb|Add Wave| on the \verb|clock_counter| signal. Plot the signal in your waveform viewer. You may notice it's a red line. Red lines in ModelSim indicate undefined signals (defined in Verilog as the letter \verb|x|).
 
-Blue lines in ModelSim indicate high-impedance (unconnected) signals. High-impedance is defined in Verilog as the letter \verb|z|. We won't be using high-impedance signals in our designs, but blue lines in ModelSim indicate something in our testbench isn't wired up properly.
+Blue lines in ModelSim indicate high-impedance (unconnected) signals. High-impedance is defined in Verilog as the letter \verb|z|. We won't be using high-impedance signals in our designs, so blue lines in ModelSim indicate something in our testbench isn't wired up properly.
 
-Going back to the red line for \verb|clock_counter|: this is caused because at the start of simulation, the value sitting inside the \verb|clock_counter| register is unknown. It could be anything! Since we don't have an explicit reset signal for our circuit to bring the \verb|clock_counter| to a defined value, it is unknown for the entire simulation.\\
+Going back to the red line for \verb|clock_counter|: this is caused because at the start of simulation, the value sitting inside the \verb|clock_counter| register is unknown. It could be anything! Since we don't have an explicit reset signal for our circuit to bring the \verb|clock_counter| to a defined value, it may be unknown for the entire simulation.
 
-Let's fix this. In the future we will use a reset signal, but for now let's use a simpler technique. In \verb|lab2/tone_generator.v| modify the \verb|reg [x:0] clock_counter| line to read \verb|reg [x:0] clock_counter = 0| instead. This implicitly tells the simulator that the initial simulation value for this register should be 0. For this lab, when you add new registers in your \verb|tone_generator| or any other design module, you should instantiate them to their default value in the same way.\\
+Let's fix this. In the future we will use a reset signal, but for now let's use a simpler technique. In \verb|lab2/src/tone_generator.v| modify this line as such:
+
+\begin{minted}{verilog}
+// Original code:
+reg [x:0] clock_counter;
+
+// Change to:
+reg [x:0] clock_counter = 0;
+\end{minted}
+
+This tells the simulator that the initial simulation value for this register should be 0. For this lab, when you add new registers in your \verb|tone_generator| or any other design module, you should instantiate them to their initial value in the same way.
 
 Now run the simulation again.
 
@@ -230,69 +242,81 @@ When you re-run your simulation and you want to plot the newly generated signals
 
 \subsection{Listen to Your Square Wave Output}
 
-Take a look at the file written by the testbench located at \verb|lab2/sim/build/output.txt|. It should be a sequence of 1s and 0s that represent the output of your \verb|tone_generator|. I've written a Python script that can take this file and generate a \verb|.wav| file that you can listen to.\\
+Take a look at the file written by the testbench located at \verb|lab2/sim/build/output.txt|. It should be a sequence of 1s and 0s that represent the output of your \verb|tone_generator| sampled at 44.1 kHz. I've written a Python script that can take this file and generate a \verb|.wav| file that you can listen to.
 
-Go to the \verb|lab2/| directory and run the command:\\
+Go to the \verb|lab2/| directory and run the command:
 
-\verb|python audio_from_sim.py sim/build/output.txt|\\
+\verb|python audio_from_sim.py sim/build/output.txt|
 
-This will generate a file called \verb|output.wav|. Run this command to play it:\\
+This will generate a file called \verb|output.wav|. Run this command to play it:
 
 \verb|play output.wav|
 
-You should hear a 440Hz square wave for 1 second after half a second of silence.
+If \verb|play| doesn't work, try running \verb|aplay output.wav|.
+
+You should hear a 440Hz square wave for 1 second.
 
 \subsection{Playing with the Testbench}
 
-Play around with the testbench by altering the clock frequency, changing when you turn on \verb|output_enable| and verify that you get the audio you expect. For checkoff be able to answer the following question and demonstrate understanding of basic simulation
+Play around with the testbench by altering the clock frequency, changing when you turn on \verb|output_enable| and verify that you get the audio you expect. For checkoff be able to answer the following question and demonstrate understanding of basic simulation:
 
 \begin{enumerate}
-	\item If you increase the clock frequency, would you expect the tone generated by your \verb|tone_generator| to be of higher pitch or lower pitch from 440Hz? Why? Show audio evidence of this from the simulation.
+	\item If you increase the clock frequency from 33 Mhz, would you expect the tone generated by your \verb|tone_generator| to be of a higher or lower frequency than 440Hz? Why? Show audio evidence of this using simulation.
+	\item Prove that the \verb|output_enable| input of your \verb|tone_generator| actually works in simulation.
 \end{enumerate}
 
 \section{Design a Configurable Frequency tone\_generator}
 
-Let's extend our \verb|tone_generator| so that it can play different notes. Add a 24-bit input to the \verb|tone_generator| module called \verb|tone_switch_period|. Note you will also have to modify your \verb|clock_counter| to be 24 bits wide.\\
+Let's extend our \verb|tone_generator| so that it can play different notes. Notice that we have a 24-bit input to the \verb|tone_generator| called \verb|tone_switch_period|. Note you will also have to modify your \verb|clock_counter| to be 24 bits wide.
 
-The \verb|tone_switch_period| describes how many clock cycles you should hold the value of your square wave output before inverting it. For example a \verb|tone_switch_period| of 37500 tells us to invert the square wave output every 37500 clock cycles, which for a 33 Mhz clock translates to a 440 Hz square wave.\\
+The \verb|tone_switch_period| describes how often the square wave output switches from high to low or low to high. For example a \verb|tone_switch_period| of 37500 tells us to invert the square wave output every 37500 clock cycles, which for a 33 Mhz clock translates to a 440 Hz square wave. Here is the derivation for review:
 
-You may have to modify the architecture of your \verb|tone_generator| to accommodate this new input signal. You should reset the internal \verb|clock_counter| every \verb|tone_switch_period| cycles and should also invert the square wave output. Remember to initialize any new registers declared in your \verb|tone_generator| to their default value to prevent unknowns during simulation.
+\begin{eqnarray}
+	\frac{33 \times 10^6 \text{ cycles}}{1 \text{ second}} \div \frac{440 \text{ periods}}{1 \text{ second}} = \frac{75000 \text{ cycles}}{1 \text{ period}} \nonumber \\
+	75000 \text{ cycles/period} \rightarrow 37500 \text{ cycles/half-period} \nonumber
+\end{eqnarray}
 
-\textbf{It is highly recommended that you draw the circuit you are about to implement before you write the code for it. Show the TA a schematic of the proposed circuit to verify that it matches the specification.}
+You may have to modify the architecture of your \verb|tone_generator| to accommodate this new input signal. You should reset the internal \verb|clock_counter| every \verb|tone_switch_period| cycles and should also invert the square wave output. Remember to initialize any new registers declared in your \verb|tone_generator| to their desired initial value to prevent unknowns during simulation.
+
 \section{Simulating and Debugging Your New tone\_generator}
 
-Now, extend the testbench to work with this new input signal. Add a new 24-bit reg to the testbench. Set \verb|output_enable| to 1 at the start of the simulation. Then set the \verb|tone_switch_period| of the DUT and run the simulation for some time (using a delay statement). Then change the \verb|tone_switch_period| again and run the simulation for some more time.\\
+Now, let's run the \verb|tone_generator_testbench| again. Since we have now implemented the \verb|tone_switch_period| functionality, changing the \verb|tone_to_play| register in the testbench should change the tone being outputted by the \verb|tone_generator|.
 
-Inspect the waveform and debug your \verb|tone_generator| if you detect any bugs. Then use the same Python script to generate an audio file to listen to your \verb|tone_generator|.
+Inspect the waveform and debug your \verb|tone_generator| if you detect any bugs. Then use the same Python script to generate an audio file to listen to your \verb|tone_generator|'s output. You should hear 5 tones, played rapidly one after the other that have descending frequencies.
 
-I suggest using \url{http://onlinetonegenerator.com/} to generate sample square wave tones and making sure your tones match.\\
-
-Create a testbench that plays some simple melody that you define and show the TA before proceeding further.
+Create a testbench that plays some simple melody that you define and have its audio output file ready for checkoff.
 
 \section{Try the tone\_generator on the FPGA}
-Modify the top-level Verilog module \verb|ml505top.v| to include the new input to the \verb|tone_generator|. You can tie the \verb|tone_switch_period| to any value you want.
+Modify the top-level Verilog module \verb|ml505top.v| to include the new input to the \verb|tone_generator|. You should tie the \verb|tone_switch_period| to the \verb|GPIO_DIP[7:1]| switches left-shifted by 9 bits (effectively a multiplication by 512). This will allow you to control the \verb|tone_switch_period| from 512 to around 65000. Leave \verb|GPIO_DIP[0]| to control \verb|output_enable|. Here is a code snippet:
 
-Run the usual \verb|make| process and then \verb|make impact| to put your new \verb|tone_generator| on the FPGA. It should work as it did before.
+\begin{minted}[tabsize=4]{verilog}
+	tone_generator piezo_controller (
+		.output_enable(GPIO_DIP[0]),
+		.tone_switch_period({17'd0, GPIO_DIP[7:1]} << 9)
+	);
+\end{minted}
+
+Run the usual \verb|make| process and then \verb|make impact| to put your new \verb|tone_generator| on the FPGA. Verify that toggling the DIP switches changes the frequency of your \verb|tone_generator|. 
 
 \section{Introduction to Inferred Asynchronous Memories - ROMs}
-An asynchronous memory is a memory block that isn't governed by a clock. In this lab, we will use a Python script to generate a ROM block in Verilog.\\
+An asynchronous memory is a memory block that isn't governed by a clock. In this lab, we will use a Python script to generate a ROM block in Verilog.
 
-A ROM is a read-only memory. A ROM can be broadly classed as a state element that holds some fixed data. This data can be accessed by supplying an address to the ROM after which the ROM will output the data from that address. Any memory block in general can contain as many addresses in which to store data as you desire. Every address should contain the same amount of data (bits). The number of addresses is called the \textbf{depth} of the memory, while the number of bits per address is called the \textbf{width} of the memory. These are important terms that are frequently used. \\
+A ROM is a read-only memory. A ROM can be broadly classed as a state element that holds some fixed data. This data can be accessed by supplying an address to the ROM; after some time, the ROM will output the data stored at that address. A memory block in general can contain as many addresses in which to store data as you desire. Every address should contain the same amount of data (bits). The number of addresses is called the \textbf{depth} of the memory, while the number of bits stored per address is called the \textbf{width} of the memory. These are important terms that are frequently used.
 
-The synthesizer is a powerful tool that takes the Verilog you write and converts it into a low-level netlist of the structures are actually used on the FPGA. Our Verilog \textbf{describes} the functionality of some digital circuit and the synthesizer \textbf{infers} what that functional description actually represents. In this section, we will examine the Verilog that allows the synthesizer (XST) to \textbf{infer} a ROM. What follows is a minimal example of a ROM in Verilog: (depth of 8 entries/addresses, width of 8 bits)
+The synthesizer is a powerful tool that takes the Verilog you write and converts it into a low-level netlist of the structures are actually used on the FPGA. Our Verilog \textbf{describes} the functionality of some digital circuit and the synthesizer \textbf{infers} what primitives implement the functional description. In this section, we will examine the Verilog that allows the synthesizer (XST) to \textbf{infer} a ROM. What follows is a minimal example of a ROM in Verilog: (depth of 8 entries/addresses, width of 12 bits)
 
 \begin{minted}{verilog}
-module rom (input [2:0] address, output reg [7:0] data);
+module rom (input [2:0] address, output reg [11:0] data);
 	always @(*) begin
 		case(address)
-			3'd0: data = 8'h00;
-			3'd1: data = 8'hFF;
-			3'd2: data = 8'hAD;
-			3'd3: data = 8'h12;
-			3'd4: data = 8'h37;
-			3'd5: data = 8'h93;
-			3'd6: data = 8'h0A;
-			3'd7: data = 8'hC2;
+			3'd0: data = 12'h000;
+			3'd1: data = 12'hFFF;
+			3'd2: data = 12'hACD;
+			3'd3: data = 12'h122;
+			3'd4: data = 12'h347;
+			3'd5: data = 12'h93A;
+			3'd6: data = 12'h0AF;
+			3'd7: data = 12'hC2B;
 		endcase
 	end
 endmodule
@@ -300,41 +324,17 @@ endmodule
 
 To power our \verb|tone_generator|, we will be using a ROM that is X entries/addresses deep and 24 bits wide. The ROM will contain tones that the \verb|tone_generator| will play. You can choose the depth of your ROM based on the length of the sequence of tones you want to play.
 
-To generate a ROM with a script, first begin by creating a file that will define the memory contents. The file should contain a decimal number on each line which represents the data stored at that address (line number). I've provided an example file called \verb|sample_data.txt| in the \verb|lab2/| folder. Each line of this file represents the \verb|tone_switch_period| of a single note. The duration of each note will be specified later.
-
-Use the provided Python script to generate a ROM Verilog file (run in \verb|lab2/|):
+We've provided you with a few scripts that can generate a ROM from either a file with it's contents or even from sheet music. Run these commands from \verb|lab2/|.
 
 \begin{minted}{bash}
-	python rom_generator.py src/rom.v sample_data.txt 128 24
+	python scripts/musicxml_parser.py musicxml/Twinkle_Twinkle_Little_Star.mxl music.txt
+	python scripts/rom_generator.py music.txt src/rom.v 1024 24
 \end{minted}
 
-This will generate a ROM in \verb|lab2/src/rom.v| using the data from \verb|sample_data.txt| with a width of 24 bits and a depth of 128 entries/addresses. Try it out and make sure you understand what the script is doing. Take a look at \verb|rom.v| and inspect its contents. Since \verb|sample_data.txt| doesn't contain 128 lines, the undefined memory addresses are filled with zeros.
+The first script will parse a MusicXML file and turn it into a list of \verb|tone_switch_periods| for each of the notes for a piece of sheet music. The second script will take that list and turn it into a ROM that's 1024 entries deep with a width of 24 bits.
 
-You can edit \verb|sample_data.txt| to fill it with your own melody. We will explore ways of generating a ROM/RAM from an initialization file using Verilog alone in a future lab.\\
+Take a look at \verb|music.txt| and \verb|src/rom.v|.
 
-You might want to try instantiating your memory in \verb|ml505top.v| and putting your design on the FPGA to see how the memory works.
-
-\begin{minted}{verilog}
-module ml505top (
-	input  CLK_33MHZ_FPGA,
-	input  [7:0] GPIO_DIP,
-	output PIEZO_SPEAKER,
-	output [7:0] GPIO_LED
-);    
-	tone_generator piezo_controller (
-		.clk(CLK_33MHZ_FPGA),
-		.output_enable(GPIO_DIP[0]),
-		.square_wave_out(PIEZO_SPEAKER)
-	);
-
-	rom memory (
-		.address(GPIO_DIP[6:0]),
-		.data(GPIO_LED[7:0])
-	);
-endmodule
-\end{minted}
-
-You can toggle the DIP switches and see the 8 LEDs light up with the lowest byte of the data in the address specified by the switches.
 \section{Design of the music\_streamer}
 Open up the \verb|music_streamer.v| file. This module will contain an instance of the ROM you created earlier and will address the ROM sequentially to play tones. The \verb|music_streamer| will play each note for a predefined amount of time by sending each switch period defined in the ROM to the \verb|tone_generator|.\\
 
@@ -363,6 +363,12 @@ In the next lab, we will be making our \verb|music_streamer| more full-featured.
 Connect a GPIO\_DIP switch to the \verb|pause| input of the \verb|music_streamer|. When this switch is turned on, your module should pause the music at the current note and should cut the output to the piezo speaker. When the switch is turned off, your module should resume playback.
 
 Connect a pair of GPIO\_DIP switches to the \verb|tempo| input of the \verb|music_streamer|. When these switches are toggled, your \verb|music_streamer| should play the notes faster or slower. Basically, you can define four different tempos that hold each note for a different amount of time. We choose a standard 1/5th of a second for this lab, but you can vary it from 1/10, 1/7, 1/5, 1/3 to change tempos of your music on the fly.
+
+\section{Checkoff}
+\begin{enumerate}
+	\item Section 3.8 - How will a higher clock frequency impact the frequency of the square wave output for a fixed \verb|tone_switch_period|?
+	\item Section 5 - Play an audio file that was generated using the \verb|tone_generator_testbench| that plays some melody you define.
+\end{enumerate}
 
 \section{Conclusion}
 You are done with lab 2! Please write down any and all feedback and criticism of this lab and share it with the TA. This is a brand new lab and I welcome everyone's input so that it can be improved.
