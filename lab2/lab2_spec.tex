@@ -246,7 +246,7 @@ Take a look at the file written by the testbench located at \verb|lab2/sim/build
 
 Go to the \verb|lab2/| directory and run the command:
 
-\verb|python audio_from_sim.py sim/build/output.txt|
+\verb|python scripts/audio_from_sim.py sim/build/output.txt|
 
 This will generate a file called \verb|output.wav|. Run this command to play it:
 
@@ -340,7 +340,7 @@ Open up the \verb|music_streamer.v| file. This module will contain an instance o
 
 We will play each note for 1/25th of a second. Calculate what that is in terms of 33Mhz clock cycles.
 
-Begin by instantiating the \verb|music_streamer| module in \verb|ml505top.v|. Connect its \verb|tone| output to the \verb|tone_switch_period| input of the \verb|tone_generator|. Connect its \verb|clk| input to the global clock signal. Connect its \verb|rom_address| output to the \verb|GPIO_LED|s by routing the top 8 bits of the address to the LEDs.
+Begin by instantiating the \verb|music_streamer| module in \verb|ml505top.v|. Use the instance name \verb|streamer| to match the expected name in the \verb|.do| file. Connect its \verb|tone| output to the \verb|tone_switch_period| input of the \verb|tone_generator|. Connect its \verb|clk| input to the global clock signal. Connect its \verb|rom_address| output to the \verb|GPIO_LED|s by routing the top 8 bits of the address to the LEDs.
 
 Now let's begin the design of the \verb|music_streamer| itself. Instantiate your ROM in the \verb|music_streamer| and connect the ROM's \verb|address| and \verb|data| ports to wire or reg nets that you create in your module (you can ignore the \verb|last_address| port).
 
