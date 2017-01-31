@@ -182,13 +182,15 @@ The results of the simulation and the logged signals are stored in a \verb|.wlf|
 
 You should see a window like this:
 
-\includegraphics[width=\textwidth]{images/modelsim.png}
+\begin{figure}[H]
+	\centerline{\includegraphics[width=\textwidth]{images/modelsim_new.png}}
+\end{figure}
 
 Let's go over the basics of ModelSim. The boxed screens are:
 
 \begin{enumerate}
-	\item List of the module involved in the testbench. You can select one of these to have its signals show up in the object window.
-	\item \textbf{Object Window} - this lists all the wires and regs in your module. You can add signals to the waveform view by selecting them, right-clicking, and doing \verb|Add Wave|.
+	\item \textbf{Module Window} - List of the modules involved in the testbench. You can select one of these to have its signals show up in the object window.
+	\item \textbf{Object Window} - List of all the wires and regs in the selected module. You can add signals to the waveform view by selecting them, right-clicking, and doing \verb|Add Wave|.
 	\item \textbf{Waveform Viewer} - The signals that you add from the object window show up here. You can navigate the waves by searching for specific values or going forward or backward one transition at a time. The x-axis represents time.
 \end{enumerate}
 
@@ -196,20 +198,25 @@ You may not see the \textbf{Waveform Viewer} when you first open ModelSim. To ad
 
 Here are a few useful shortcuts:
 
-\begin{enumerate}
+\begin{itemize}
 	\item \textbf{Click on waveform}: Sets cursor position
-	\item \textbf{O}:
-\end{enumerate}
+	\item \textbf{O}: Zoom out of waveform
+	\item \textbf{I}: Zoom into waveform
+	\item \textbf{F}: Fit entire waveform into viewer (zoom full)
+	\item \textbf{C}: Zoom in on cursor position
+	\item \textbf{Middle Click + Drag Left/Right}: Zoom in on waveform section
+	\item \textbf{Middle Click + Drag to Top Right}: Zoom out from current waveform section
+\end{itemize}
 
-Click anywhere on the waveform viewer to set your cursor and use the \verb|O| and \verb|I| keys to zoom in and out. Zoom out all the way.
+You should play with these shortcuts for a few minutes; they will boost your productivity when debugging greatly. Now, zoom to fit the entire waveform in your viewer.
 
-You should be able to see the clock oscillate at the frequency specified in the testbench. You should also see the \verb|output_enable| signal start at 0 and then become 1 after 500 ms. However, you will see that the \verb|sq_wave| signal is just a red line. What's going on?
+You should be able to see the clock oscillate at the frequency specified in the testbench. You should also see the \verb|output_enable| signal start at 0 and then become 1 after 10 ms. However, you may see that the \verb|sq_wave| signal is just a red line. What's going on?
 
 \subsection{Fixing the Undefined clock\_counter}
 
-Take a look at the \verb|clock_counter| in your \verb|tone_generator| module. Plot the signal in your waveform viewer. You will notice it's also a red line. Red lines in ModelSim indicate undefined signals (indicated in Verilog as the letter \verb|x|). \\
+Take a look at the \verb|clock_counter| in your \verb|tone_generator| module, by clicking on \verb|piezo_controller| in the module. Plot the signal in your waveform viewer. You will notice it's also a red line. Red lines in ModelSim indicate undefined signals (indicated in Verilog as the letter \verb|x|).
 
-Blue lines in ModelSim indicate high-impedance (unconnected) signals. High-impedance is defined in Verilog as the letter \verb|z|. We won't be using high-impedance signals in our designs, but blue lines in ModelSim indicate something in our testbench isn't wired up properly.\\
+Blue lines in ModelSim indicate high-impedance (unconnected) signals. High-impedance is defined in Verilog as the letter \verb|z|. We won't be using high-impedance signals in our designs, but blue lines in ModelSim indicate something in our testbench isn't wired up properly.
 
 Going back to the red line for \verb|clock_counter|: this is caused because at the start of simulation, the value sitting inside the \verb|clock_counter| register is unknown. It could be anything! Since we don't have an explicit reset signal for our circuit to bring the \verb|clock_counter| to a defined value, it is unknown for the entire simulation.\\
 
