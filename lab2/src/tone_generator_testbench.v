@@ -22,6 +22,7 @@ module tone_generator_testbench();
     );
 
     initial begin
+        tone_to_play <= 24'd0;
         output_enable <= 1'b0;
         #(10 * `MS);
         output_enable <= 1'b1;
