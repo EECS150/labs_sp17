@@ -232,7 +232,7 @@ reg [x:0] clock_counter;
 reg [x:0] clock_counter = 0;
 \end{minted}
 
-This tells the simulator that the initial simulation value for this register should be 0. For this lab, when you add new registers in your \verb|tone_generator| or any other design module, you should instantiate them to their initial value in the same way.
+This tells the simulator that the initial simulation value for this register should be 0. For this lab, when you add new registers in your \verb|tone_generator| or any other design module, you should instantiate them to their initial value in the same way. \textbf{Do not set an initial value for a 'wire' type net; it will cause issues with synthesis, and may cause X's in simulation.}
 
 Now run the simulation again.
 
