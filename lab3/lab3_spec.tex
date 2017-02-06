@@ -82,9 +82,9 @@ This synchronizer circuit we want you to implement for this lab is relatively si
 Edit the \verb|lab3/src/synchronizer.v| file to implement the two flip-flop synchronizer. This module is parameterized by a \verb|width| parameter which indicates the number of one-bit signals to synchronize.
 
 \subsubsection{Testing in Simulation}
-The testbenches to be run are stored in \verb|lab4/sim/tests|. Each \verb|.do| file in this directory is run when you run \verb|make| in the \verb|lab4/sim| directory. If you only want to run one testbench, you can rename all the other \verb|.do| files in this directory to have a different file extension.
+The testbenches to be run are stored in \verb|lab3/sim/tests|. Each \verb|.do| file in this directory is run when you run \verb|make| in the \verb|lab3/sim| directory. If you only want to run one testbench, you can rename all the other \verb|.do| files in this directory to have a different file extension.
 
-Run \verb|make| in the \verb|lab4/sim| directory to run the testbenches. We have provided a testbench for your synchronizer called \verb|sync_testbench| in \verb|lab4/src/sync_testbench.v|. Take a look at the code for this testbench and run it; \textbf{the testbench should pass and you should inspect the waveform before you move on.} For details on the techniques/syntax used in this testbench, refer to Section 7 of this lab.
+Run \verb|make| in the \verb|lab3/sim| directory to run the testbenches. We have provided a testbench for your synchronizer called \verb|sync_testbench| in \verb|lab3/src/sync_testbench.v|. Take a look at the code for this testbench and run it; \textbf{the testbench should pass and you should inspect the waveform before you move on.} For details on the techniques/syntax used in this testbench, refer to the 'Testbench Techniques' section of this lab.
 
 %\subsubsection{Testing on the FPGA}
 %As a rudimentary test of your synchronizer, we have provided a file called \verb|lab4/src/synchronizer_fpga_test.v| which will synchronize various button press signals and send them to the GPIO LEDs. Execute the following commands:
