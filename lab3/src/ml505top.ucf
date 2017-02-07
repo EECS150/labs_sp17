@@ -16,6 +16,17 @@ NET GPIO_LED<5>         IOSTANDARD="LVCMOS18";
 NET GPIO_LED<6>         IOSTANDARD="LVCMOS18";
 NET GPIO_LED<7>         IOSTANDARD="LVCMOS18";
 
+NET GPIO_LED_C          LOC="E8";    # Bank 20, Vcco=3.3V, DCI using 49.9 ohm resistors
+NET GPIO_LED_C          IOSTANDARD="LVCMOS33";
+NET GPIO_LED_E          LOC="AG23";  # Bank 2, Vcco=3.3V
+NET GPIO_LED_E          IOSTANDARD="LVCMOS33";
+NET GPIO_LED_N          LOC="AF13";  # Bank 2, Vcco=3.3V
+NET GPIO_LED_N          IOSTANDARD="LVCMOS33";
+NET GPIO_LED_S          LOC="AG12";  # Bank 2, Vcco=3.3V
+NET GPIO_LED_S          IOSTANDARD="LVCMOS33";
+NET GPIO_LED_W          LOC="AF23";  # Bank 2, Vcco=3.3V
+NET GPIO_LED_W          IOSTANDARD="LVCMOS33";
+
 NET GPIO_DIP<0>         LOC="U25";   # Bank 15, Vcco=1.8V, DCI using 49.9 ohm resistors
 NET GPIO_DIP<1>         LOC="AG27";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
 NET GPIO_DIP<2>         LOC="AF25";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
