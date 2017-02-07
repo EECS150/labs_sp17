@@ -1,0 +1,30 @@
+NET GPIO_LED<0>         LOC="H18";   # Bank 3, Vcco=2.5V, No DCI
+NET GPIO_LED<1>         LOC="L18";   # Bank 3, Vcco=2.5V, No DCI
+NET GPIO_LED<2>         LOC="G15";   # Bank 3, Vcco=2.5V, No DCI
+NET GPIO_LED<3>         LOC="AD26";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_LED<4>         LOC="G16";   # Bank 3, Vcco=2.5V, No DCI
+NET GPIO_LED<5>         LOC="AD25";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_LED<6>         LOC="AD24";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET GPIO_LED<7>         LOC="AE24";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm resistors
+
+NET GPIO_LED<0>         IOSTANDARD="LVCMOS25";
+NET GPIO_LED<1>         IOSTANDARD="LVCMOS25";
+NET GPIO_LED<2>         IOSTANDARD="LVCMOS25";
+NET GPIO_LED<3>         IOSTANDARD="LVCMOS18";
+NET GPIO_LED<4>         IOSTANDARD="LVCMOS25";
+NET GPIO_LED<5>         IOSTANDARD="LVCMOS18";
+NET GPIO_LED<6>         IOSTANDARD="LVCMOS18";
+NET GPIO_LED<7>         IOSTANDARD="LVCMOS18";
+
+NET  FPGA_ROTARY_INCA     LOC="AH30";  # Bank 17, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET  FPGA_ROTARY_INCA     IOSTANDARD="LVCMOS18";
+NET  FPGA_ROTARY_INCB     LOC="AG30";  # Bank 17, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET  FPGA_ROTARY_INCB     IOSTANDARD="LVCMOS18";
+NET  FPGA_ROTARY_PUSH     LOC="AH29";  # Bank 17, Vcco=1.8V, DCI using 49.9 ohm resistors
+NET  FPGA_ROTARY_PUSH     IOSTANDARD="LVCMOS18";
+
+NET CLK_33MHZ_FPGA LOC="AH17";
+NET CLK_33MHZ_FPGA IOSTANDARD="LVCMOS25";
+
+NET "CLK_33MHZ_FPGA" TNM_NET = CLK_33MHZ_FPGA;
+TIMESPEC TS_USER_CLK = PERIOD "CLK_33MHZ_FPGA" 30.3 ns HIGH 50%;
