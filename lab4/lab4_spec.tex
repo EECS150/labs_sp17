@@ -107,7 +107,9 @@ This tells \verb|screen|, a highly versatile terminal emulator, to open up the s
 
 Now, if you have a properly working design, you should be able to tap a few characters into the terminal and have them echoed to you (with inverted case if you type letters). Make sure that if you type really fast that all characters still display properly. If you see some weird garbage symbols then the data is getting corrupted and something is likely wrong. If you see this happening very infrequently, don't just hope that it won't happen while the TA is doing the checkoff; take the time now to figure out what is wrong. UART bugs are a common source of headaches for groups during the first project checkpoint. 
 
-To close \verb|screen|, type \verb|Ctrl-a| then \verb|Shift-k| and answer \verb|y| to the confirmation prompt. If you don't close screen properly, other students won't be able to access the serial port. Use \verb|screen -r| to re-attach an improperly closed screen session. Note that if \textbf{someone else} has forgotten to close \verb|screen| and thus locked the serial cable on your workstation, you will not be able to execute this command. Since we don’t have \verb|sudo| access on these machines, the only way to resolve this problem is to either find the offending user and have him kill his session, or reboot the computer.
+To close \verb|screen|, type \verb|Ctrl-a| then \verb|Shift-k| and answer \verb|y| to the confirmation prompt. If you don't close screen properly, other students won't be able to access the serial port. If you try opening \verb|screen| and it terminates after a few seconds with an error saying "Sorry, can't find a PTY" or "Device is busy", execute the command \verb|killscreen| which will kill all open screen sessions that other students may have left open. Then run \verb|screen| again.
+
+Use \verb|screen -r| to re-attach an improperly closed screen session. You can also reboot the computer to clear all active \verb|screen| sessions.
 
 \subsection{Checkoff}
 Show your TA that you can successfully type characters on the keyboard and have them echoed back to display on your \verb|screen| session.
