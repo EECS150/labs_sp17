@@ -33,6 +33,9 @@ In this lab you will implement a UART (Universal Asynchronous Receiver / Transmi
 
 \textbf{This lab will be done individually, but the next 2 labs will be done with a partner.} If you have not found one yet, now is the time to do so. The deliverable for this lab will be used in your final project. Once you have a group of two, please email the TAs (bob.linchuan@berkeley.edu and vighnesh.iyer@berkeley.edu) with the names and Github ID's of both group members so that we can create your team project repositories. You can complete the lab without having your project repository yet; you'll only need it for the project.
 
+\section{Lab Setup}
+Run \verb|git pull| in the \verb|labs_sp17| folder to fetch the latest skeleton files. You will need to copy over your \verb|debouncer.v|, \verb|edge_detector.v|, and \verb|synchronizer.v| from Lab 3 to \verb|labs_sp17/lab4/src/|.
+
 \section{Serial Device}
 You are responsible only for implementing the \textbf{transmit} side of the UART for this lab. As you should have inferred from reading the ready/valid tutorial, the UART transmit and receive modules use a ready/valid interface to communicate with other modules on the FPGA.
 
@@ -74,7 +77,9 @@ The diagram below shows the entire setup:
 \end{figure}
 
 \subsection{Simulation}
-We have provided a simple testbench, called \verb|uart_testbench| that will run some basic tests on two instantiations of the UART module with their RX and TX signals crossed so that they can talk to each other. There is also a \verb|.do| file that will run the test. You should note that this test bench reporting success is \textbf{not} by itself a good indication that your UART is working properly. The testbench does not attempt to test back to back UART transmissions so you will have to add that test in yourself. Due to the way x's are treated by Modelsim if many signals in your design are undefined the testbench may erroneously pass. Make sure to look at the waveform to see that everything appears to be working properly and that you adequately purge your simulation of high Z and undefined X signals.
+We have provided a simple testbench, called \verb|uart_testbench| that will run some basic tests on two instantiations of the UART module with their RX and TX signals crossed so that they can talk to each other. There is also a \verb|.do| file that will run the test. You should note that this test bench reporting success is \textbf{not} by itself a good indication that your UART is working properly. The testbench does not attempt to test back to back UART transmissions so you will have to add that test in yourself. Due to the way x's are treated by Modelsim if many signals in your design are undefined the testbench may erroneously pass. Make sure to look at the waveform to see that everything appears to be working properly and that you adequately purge your simulation of high Z and undefined X signals. 
+
+If the testbench prints out \verb|# <EOF>| it means that it timed out; this indicates that the testbench was stuck on a line, likely due to a condition that never became true. Inspect the waveform and match it up to the testbench code to see where it hangs and why. You shouldn't need to increase any of the timeouts in the \verb|.do| files.
 
 \subsection{Echo}
 Your UART will eventually be used to interact with your CPU from your workstation. Since you don't have a CPU yet, you need some other way to test that your UART works on the board.
@@ -90,17 +95,21 @@ We have provided this for you. The provided \verb|ml505top| contains a very simp
 
 Before programming your board, check with the provided \verb|echo_testbench.v| testbench that everything works as it should in simulation. This testbench is heavily commented to help you understand the communication between the 2 UARTs and the communication over the ready/valid interface. The file often refers to the UART on the workstation as the off-chip UART and the UART on the FPGA as the on-chip UART.
 
-Once you have echo working in simulation, it is time to try it on the board. Synthesize your design and impact the board with it just like you have done in previous labs. Now, make sure the USB serial cable is plugged in between the ML505 board and your workstation and then run:
+Once you have echo working in simulation, it is time to try it on the board. Synthesize your design and impact the board with it just like you have done in previous labs. You may see up to 3 warnings about \verb|rx_shift<0>| being unconnected or unused; these are expected and can be safely ignored.
 
-\begin{verbatim}
+Now, make sure the USB serial cable is plugged in between the ML505 board and your workstation and then run:
+
+\begin{minted}{bash}
 screen $SERIALTTY 115200
-\end{verbatim}
+\end{minted}
 
 This tells \verb|screen|, a highly versatile terminal emulator, to open up the serial device with a baud rate of 115200. When you type a character into the terminal, it is sent to the FPGA over the \verb|FPGA_SERIAL_RX| line, encoded in ASCII. The state machine in \verb|ml505top| may modify the character you sent it and will then push a new character over the \verb|FPGA_SERIAL_TX| line to your workstation. When \verb|screen| receives a character, it will display it in the terminal.
 
 Now, if you have a properly working design, you should be able to tap a few characters into the terminal and have them echoed to you (with inverted case if you type letters). Make sure that if you type really fast that all characters still display properly. If you see some weird garbage symbols then the data is getting corrupted and something is likely wrong. If you see this happening very infrequently, don't just hope that it won't happen while the TA is doing the checkoff; take the time now to figure out what is wrong. UART bugs are a common source of headaches for groups during the first project checkpoint. 
 
-To close \verb|screen|, type \verb|Ctrl-a| then \verb|Shift-k| and answer \verb|y| to the confirmation prompt. If you don't close screen properly, other students won't be able to access the serial port. Use \verb|screen -r| to re-attach an improperly closed screen session. Note that if \textbf{someone else} has forgotten to close \verb|screen| and thus locked the serial cable on your workstation, you will not be able to execute this command. Since we don’t have \verb|sudo| access on these machines, the only way to resolve this problem is to either find the offending user and have him kill his session, or reboot the computer.
+To close \verb|screen|, type \verb|Ctrl-a| then \verb|Shift-k| and answer \verb|y| to the confirmation prompt. If you don't close screen properly, other students won't be able to access the serial port. If you try opening \verb|screen| and it terminates after a few seconds with an error saying "Sorry, can't find a PTY" or "Device is busy", execute the command \verb|killscreen| which will kill all open screen sessions that other students may have left open. Then run \verb|screen| again.
+
+Use \verb|screen -r| to re-attach an improperly closed screen session. You can also reboot the computer to clear all active \verb|screen| sessions.
 
 \subsection{Checkoff}
 Show your TA that you can successfully type characters on the keyboard and have them echoed back to display on your \verb|screen| session.
