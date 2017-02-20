@@ -181,7 +181,19 @@ Once the reset signal has been asserted for the required time, after a delay of 
 The codec needs a way to know when a frame is about to begin so that it can interpret its content appropriately. This is done using the \verb|SYNC| signal which is sent from your controller to the codec. You should assert \verb|SYNC| for a total duration of 16 \verb|BIT_CLK|s at the beginning of each audio frame. Refer back to Figure 3 in Section 3.2 to understand how the \verb|SYNC| signal should be asserted with each frame.
 
 \section{Copy Over Lab 3+4 Designs}
-You should copy over your lab 4 input processing circuits. Copy over your implementations of \verb|synchronizer.v, debouncer.v, edge_detector.v|, and \verb|rotary_decoder.v|. Then copy over your \verb|tone_generator.v| and \verb|music_streamer.v|. You can directly copy these files over from your \verb|labs_sp17/lab4| directory.
+You should copy over your lab 4 input processing circuits. Copy over your implementations of \verb|synchronizer.v, debouncer.v, edge_detector.v|, and \verb|rotary_decoder.v|. Then copy over your \verb|tone_generator.v| and \verb|music_streamer.v|. You can directly copy these files over from your \verb|labs_sp17/lab3| directory.
+
+\begin{minted}[tabsize=4]{bash}
+	cd ~/labs_sp17
+	cp lab3/src/synchronizer.v lab5/src/.
+	cp lab3/src/debouncer.v lab5/src/.
+	cp lab3/src/edge_detector.v lab5/src/.
+	cp lab3/src/rotary_decoder.v lab5/src/.
+	cp lab3/src/tone_generator.v lab5/src/.
+	cp lab3/src/music_streamer.v lab5/src/.
+\end{minted}
+
+You can overwrite the existing skeleton files in \verb|lab5/src|.
 
 \section{Building the AC97 Controller}
 
