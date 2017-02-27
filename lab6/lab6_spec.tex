@@ -195,17 +195,53 @@ We want to connect an async FIFO between the AC97 controller and the piano FSM. 
 
 Remove the \verb|square_wave| input from the AC97 controller's ports, and add new ports for interfacing with an async FIFO. Then, modify the logic in your AC97 controller to pull one piece of data from the async FIFO for each frame. You can decide to pull the data right after you have sent slot 4, or right before you send the tag; your choice.
 
+If the FIFO is empty when you attempt to pull data from it, you should continue sending the last value that you had pulled from it on every AC97 frame, until the FIFO is no longer empty on the subsequent pull attempt.
+
 \subsection{Modify the AC97 Controller Testbench}
 Copy over the AC97 controller testbench (\verb|lab5/src/ac97_controller_testbench.v|) from lab 5.
 
-Modify the AC97 controller testbench by instantiating an async FIFO and sending data to it using the \verb|system_clock| in the \verb|initial| block. Then execute the testbench again, and verify that your AC97 controller is able to properly interface with the async FIFO.
+Modify the AC97 controller testbench by instantiating an async FIFO and sending data to it using the \verb|system_clock| in the \verb|initial| block. Then execute the testbench again, and verify that your AC97 controller is able to properly interface with the async FIFO. You may have to modify the default parameter values when you instantiate the \verb|async_fifo|.
 
 \section{Building the Piano FSM}
+Now we will design the logic that interfaces the FIFOs coming from the UART and the async FIFO that provides data for the AC97 controller. This module is the 'Piano FSM' in the block diagram in the lab intro.
 
+The skeleton for the \verb|piano_fsm| is provided in \verb|src/piano_fsm.v|. You can see that it has access to the UART transmitter FIFO, the UART receiver FIFO, and the AC97 sample async FIFO. It also has access to a reset signal coming from the \verb|CPU_RESET| button and the rotary decoder outputs. This FSM should implement the following functionality:
 
+\begin{itemize}
+	\item When the UART receiver FIFO contains a character, the FSM should pull the character from the FIFO and echo it back without modification through the UART transmitter FIFO.
+	
+	\item Once a character is pulled, its corresponding \verb|tone_switch_period| should be read from the supplied \verb|piano_scale_rom.v|.
+	
+	\item For a given amount of time (\verb|note_length|), the tone should be played by sending samples of the tone (at 48 kHz) into the AC97 sample FIFO
+	
+	\item The \verb|note_length| should default to 1/5th of a second, and can be changed by a fixed amount with the rotary wheel. This should be similar to the tempo changing you implemented in the \verb|music_streamer|.
+	
+	\item Through doing all of this, your FSM should take care to ensure that if a FIFO is full, that it waits until it isn't full before pushing through data.
+	
+	\item If the UART receiver FIFO is empty, the AC97 FIFO shouldn't be filled with anything.
+	
+	\item The \verb|piezo_speaker| output of this FSM connects directly to the piezo on the ML505 board. It should be driven with the square wave that's playing through the AC97 controller.
+\end{itemize}
+
+You don't need to design the \verb|piano_fsm| as an explicit FSM with states; the design is entirely up to you.
+
+A ROM containing mappings from ASCII character codes to the \verb|tone_switch_period| of the note to be played can be found in \verb|src/piano_scale_rom.v|. If you wish to re-generate this file, use these commands:
+
+\begin{minted}{bash}
+cd labs_sp17/lab6
+python scripts/piano_scale_generator.py scale.txt
+python scripts/rom_generator.py scale.txt src/piano_scale_rom.v 256 24
+\end{minted}
+
+A possible implementation of this module would be to include an instance of your \verb|tone_generator|, and sample its output at 48 kHz to send samples into the AC97 sample FIFO. The details of the implementation are all up to you.
+
+\subsection{Modify ml505top}
+Now open up \verb|ml505top.v| and modify it at the bottom to include the new modules you wrote. Wire up the FIFOs and your piano FSM according to the block diagram in the lab intro. You will have to add a few lines of logic (purple cloud) representing the bridge between the ready/valid interface and the FIFO's rd\_en, wr\_en / full, empty interface. 
+
+Make sure that you parameterize your FIFOs properly so that they have the proper \verb|data_width|. You can make your FIFOs as deep as you want, but 8 is a good default depth.
 
 \section{Writing a System-Level Testbench}
-
+This design involves quite a few moving parts that communicate with each other. We want to make sure that the complete integration of our system works as expected. To that end, you will have to write a system-level testbench that stimulates the top-level of your design and observes the top-level outputs to confirm correct behavior.
 
 
 \section{Conclusion + Checkoff}
