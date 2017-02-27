@@ -39,6 +39,21 @@ Here is an overview of the entire system in \verb|ml505top| we are going to buil
 
 In this lab, you will be building the FIFOs, modifying your AC97 controller to use one, and designing the piano FSM. You will then construct a system-level testbench to verify functionality in simulation.
 
+\subsection{Copying Files From Previous Labs}
+You will need the following files from previous labs:
+
+\begin{minted}{bash}
+cd labs_sp17
+cp lab4/src/uart.v lab6/src/.
+cp lab4/src/uart_receiver.v lab6/src/.
+cp lab4/src/uart_transmitter.v lab6/src/.
+cp lab5/src/tone_generator.v lab6/src/.
+cp lab5/src/synchronizer.v lab6/src.
+cp lab5/src/debouncer.v lab6/src.
+cp lab5/src/edge_detector.v lab6/src/.
+cp lab5/src/rotary_decoder.v lab6/src/.
+\end{minted}
+
 \section{Building a Synchronous FIFO}
 A FIFO (first in, first out) data buffer is a circuit that has two interfaces: a read side and a write side. The FIFO we will build in this section will have both the read and write side clocked by the same clock; this circuit is known as a synchronous FIFO.
 
@@ -104,6 +119,11 @@ Your FIFO doesn't need to support the \verb|ALMOST_FULL|, \verb|WR_ACK|, or \ver
 \subsection{FIFO Testing}
 We have provided a testbench for your synchronous FIFO which can be found in \verb|src/fifo_testbench.v|. This testbench can test either the synchronous or the asynchronous FIFO you will create later in the project. To change which DUT is tested, comment out or reenable the defines at the top of the testbench (\verb|SYNC_FIFO_TEST|, \verb|ASYNC_FIFO_TEST|).
 
+\begin{minted}{bash}
+cd labs_sp17/lab6/sim
+make CASES="tests/fifo.do"
+\end{minted}
+
 The testbench we have provided performs the following test sequence, which you should understand well.
 \begin{enumerate}
 	\item Checks initial conditions after reset (FIFO not full and is empty)
@@ -158,17 +178,35 @@ Handling resets in an async FIFO is tricky since a synchronous reset from one cl
 For this lab, we are going to go with the last option as it is the most robust for our target (an FPGA and a temperamental AC97 bit clock). This means that you should initialize any \verb|reg| nets that represent actual registers in your async FIFO design.
 
 \subsection{Async FIFO Interface}
-The interface of the async FIFO template in \verb|hardware/src/async_fifo.v| is identical to the interface of the synchronous FIFO with the exception of having an independent read and write clock.
+The interface of the async FIFO template in \verb|src/async_fifo.v| is identical to the interface of the synchronous FIFO with the exception of having an independent read and write clock.
 
 \subsection{Async FIFO Timing}
 The timing of the async FIFO is similar to that of the synchronous FIFO with the exception that the full and empty signals can have 'delayed' transitions (of a few clock cycles) due to the need to synchronize the read and write pointers. Refer to page 110 of the \href{https://www.xilinx.com/support/documentation/ip_documentation/fifo_generator_ug175.pdf}{Xilinx FIFO IP Manual} for the timing diagrams.
 
 \subsection{Async FIFO Testing}
-The same testbench used for testing the synchronous FIFO can be used to test the async FIFO at \verb|hardware/src/fifo_testbench.v|. The only change is that at the top of the testbench file, uncomment the \verb|ASYNC_FIFO_TEST| define and comment out the \verb|SYNC_FIFO_TEST| define. Then run the testbench as usual with \verb|make sim|.
+The same testbench used for testing the synchronous FIFO can be used to test the async FIFO at \verb|src/fifo_testbench.v|. The only change is that at the top of the testbench file, uncomment the \verb|ASYNC_FIFO_TEST| define and comment out the \verb|SYNC_FIFO_TEST| define. Then run the testbench as usual with \verb|make sim|.
 
 The same additional tests recommended with the synchronous FIFO are recommended for this FIFO as well. These additional tests are even more important to get right with the asynchronous FIFO, so we highly recommend writing them.
 
 By now, you should have a working async FIFO, at least in simulation. As you may discover, basic functional simulation isn't usually a good way of telling whether a clock crossing works as expected, although it will confirm that your logic is sound.
+
+\section{Modifying the AC97 Controller}
+We want to connect an async FIFO between the AC97 controller and the piano FSM. So, we need to modify the AC97 controller from last lab to take the \verb|dout[19:0]|, \verb|empty| signals as inputs and drive the \verb|rd_en| signal as an output. We will use the data stored in this FIFO as the PCM data we want to send for each AC97 frame.
+
+Remove the \verb|square_wave| input from the AC97 controller's ports, and add new ports for interfacing with an async FIFO. Then, modify the logic in your AC97 controller to pull one piece of data from the async FIFO for each frame. You can decide to pull the data right after you have sent slot 4, or right before you send the tag; your choice.
+
+\subsection{Modify the AC97 Controller Testbench}
+Copy over the AC97 controller testbench (\verb|lab5/src/ac97_controller_testbench.v|) from lab 5.
+
+Modify the AC97 controller testbench by instantiating an async FIFO and sending data to it using the \verb|system_clock| in the \verb|initial| block. Then execute the testbench again, and verify that your AC97 controller is able to properly interface with the async FIFO.
+
+\section{Building the Piano FSM}
+
+
+
+\section{Writing a System-Level Testbench}
+
+
 
 \section{Conclusion + Checkoff}
 You are done with lab 6! Please write down any and all feedback and criticism of this lab and share it with the TA. This is a brand new lab and we welcome everyone's input so that it can be improved.
