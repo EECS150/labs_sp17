@@ -218,7 +218,7 @@ The skeleton for the \verb|piano_fsm| is provided in \verb|src/piano_fsm.v|. You
 	
 	\item Through doing all of this, your FSM should take care to ensure that if a FIFO is full, that it waits until it isn't full before pushing through data.
 	
-	\item If the UART receiver FIFO is empty, the AC97 FIFO shouldn't be filled with anything.
+	\item If the UART receiver FIFO is empty, the AC97 FIFO can be filled with a constant value (like 0) for every sample or not filled at all. The \verb|piezo_speaker| output shouldn't oscillate if there's nothing to play.
 	
 	\item The \verb|piezo_speaker| output of this FSM connects directly to the piezo on the ML505 board. It should be driven with the square wave that's playing through the AC97 controller.
 \end{itemize}
@@ -233,7 +233,11 @@ python scripts/piano_scale_generator.py scale.txt
 python scripts/rom_generator.py scale.txt src/piano_scale_rom.v 256 24
 \end{minted}
 
+You will then have to modify \verb|piano_scale_rom.v| to use the module name \verb|piano_scale_rom|.
+
 A possible implementation of this module would be to include an instance of your \verb|tone_generator|, and sample its output at 48 kHz to send samples into the AC97 sample FIFO. The details of the implementation are all up to you.
+
+It is possible that the UART receiver FIFO can fill up with samples so fast that the piano FSM can't keep up; similar overflow conditions are possible with other parts of this system. You don't need to concern yourself with detecting 'backpressure' on the entire system and can just assume that your FIFOs are large enough to buffer all the user input and audio output.
 
 \subsection{Modify ml505top}
 Now open up \verb|ml505top.v| and modify it at the bottom to include the new modules you wrote. Wire up the FIFOs and your piano FSM according to the block diagram in the lab intro. You will have to add a few lines of logic (purple cloud) representing the bridge between the ready/valid interface and the FIFO's rd\_en, wr\_en / full, empty interface. 
@@ -243,12 +247,23 @@ Make sure that you parameterize your FIFOs properly so that they have the proper
 \section{Writing a System-Level Testbench}
 This design involves quite a few moving parts that communicate with each other. We want to make sure that the complete integration of our system works as expected. To that end, you will have to write a system-level testbench that stimulates the top-level of your design and observes the top-level outputs to confirm correct behavior.
 
+We have provided a template for a system testbench in \verb|src/system_testbench.v|. It will be up to you to fill in the \verb|initial| block to test all the parts of the piano.
+
+To make the waveform shorter and easier to debug, it is suggested that you change your \verb|note_length| default value in the \verb|piano_fsm| to something much smaller than 1/5th of a second, just for testing.
+
+\section{FPGA Testing}
+To put your design on the FPGA, run \verb|make| in the \verb|labs_sp17/lab6| folder as usual. You should check the \verb|make report| to see if there are any unexpected warnings. You should watch out specifically for warnings like 'found x-bit latch' or 'x signal unconnected' or 'x signal assigned but never used'. If you see that the synthesis tool inferred a latch, you should definitely fix that warning
+
 
 \section{Conclusion + Checkoff}
 You are done with lab 6! Please write down any and all feedback and criticism of this lab and share it with the TA. This is a brand new lab and we welcome everyone's input so that it can be improved.
 
 
 \subsection{Checkoff Tasks}
-
+\begin{enumerate}
+	\item Show the system-level testbench you wrote and its methodology for testing your piano's functionality
+	\item Show the output waveform of your testbench and explain how data moves through your system
+	\item Demonstrate the piano working on the FPGA both through the piezo speaker and the AC97 codec's headphone output. Demonstrate that the volume control of the AC97 controller still works.
+\end{enumerate}
 
 \end{document}
