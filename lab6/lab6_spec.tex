@@ -252,18 +252,30 @@ We have provided a template for a system testbench in \verb|src/system_testbench
 To make the waveform shorter and easier to debug, it is suggested that you change your \verb|note_length| default value in the \verb|piano_fsm| to something much smaller than 1/5th of a second, just for testing.
 
 \section{FPGA Testing}
-To put your design on the FPGA, run \verb|make| in the \verb|labs_sp17/lab6| folder as usual. You should check the \verb|make report| to see if there are any unexpected warnings. You should watch out specifically for warnings like 'found x-bit latch' or 'x signal unconnected' or 'x signal assigned but never used'. If you see that the synthesis tool inferred a latch, you should definitely fix that warning
+To put your design on the FPGA, run \verb|make| in the \verb|labs_sp17/lab6| folder as usual. You should check the \verb|make report| to see if there are any unexpected warnings. You should watch out specifically for warnings like 'found x-bit latch' or 'x signal unconnected' or 'x signal assigned but never used'. If you see that the synthesis tool inferred a latch, you should definitely fix that warning by completing any if-elseif-else or case statements that don't have a default signal assignment. The other 2 warning types are dependent on your design and you should ignore them only if you know they are expected.
 
+Once you put your design on the FPGA, with \verb|make impact|, you can send data to the on-chip UART by using \verb|screen $SERIALTTY 115200|. You can reset your design by pressing the \verb|CPU_RESET| button. Use the \verb|GPIO_DIP| switches to turn on your design. The last switch will turn on the \verb|PIEZO_SPEAKER| output, and the AC97 output is on by default. Use switches 3-6 to control the volume of the headphone output.
+
+You also should be able to use the rotary wheel to change the \verb|note_length| of your piano. You should test the case where you make the \verb|note_length| long, and fill up your UART FIFO by typing really fast. Then watch your FIFO drain slowly as each note is played for \verb|note_length| time.
+
+\section{Extra Credit (Optional)}
+You can complete any of the tasks in this section to get a boost of your lab grade. Everything here is optional. If you would like to try something else for extra credit, ask a TA.
+
+\begin{itemize}
+	\item Implement different output waveforms rather than just a square wave. You can choose to implement a triangle or sawtooth or sine wave output and have the different waveform output modes toggled with a DIP switch or button press. Only 1 extra waveform is needed for extra credit.
+	\item Implement a partial ADSR (attack, delay, sustain, release) envelope of your output waveforms. Here is a reference link \url{https://en.wikipedia.org/wiki/Synthesizer#Attack_Decay_Sustain_Release_.28ADSR.29_envelope}. You only need to implement an attack and release volume rolloff, and can use a single volume level for both the delay and sustain portions of your waveform. You should include some way of changing the attack and release periods (either through the rotary encoder or buttons).
+	\item Any other ideas you have to make this FPGA design more like a 'real' keyboard.
+\end{itemize}
 
 \section{Conclusion + Checkoff}
 You are done with lab 6! Please write down any and all feedback and criticism of this lab and share it with the TA. This is a brand new lab and we welcome everyone's input so that it can be improved.
-
 
 \subsection{Checkoff Tasks}
 \begin{enumerate}
 	\item Show the system-level testbench you wrote and its methodology for testing your piano's functionality
 	\item Show the output waveform of your testbench and explain how data moves through your system
 	\item Demonstrate the piano working on the FPGA both through the piezo speaker and the AC97 codec's headphone output. Demonstrate that the volume control of the AC97 controller still works.
+	\item Prove the existence of your UART RX and TX FIFOs by increasing the \verb|note_length| and filling the RX FIFO and seeing the data drain out slowly into your FSM.
 \end{enumerate}
 
 \end{document}
