@@ -1,3 +1,4 @@
+`timescale 1ns/100ps
 /*
     This module attempts to model the AC97 codec (AD1981B) and displays debug messages
     when a control register has been set or when slots 3 and 4 have been written with PCM data.

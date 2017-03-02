@@ -1,3 +1,4 @@
+`timescale 1ns/100ps
 // These are the compass button mappings in the 5-bit signal
 `define B_CENTER 0
 `define B_EAST 1
